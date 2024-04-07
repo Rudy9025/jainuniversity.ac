@@ -48,44 +48,10 @@ async function getAddress() {
 // Middleware to get IP address --------------------------------end------------------------------
 
 
-// Middleware to get system information,os info,wifi details
-app.use(async (req, res, next) => {
-    try {
-        // Get system information
-        const systemData = await si.system();
-        req.systemData = systemData; // Assign system data to request object
-
-        // Get OS information
-        const osData = await si.osInfo();
-        req.osData = osData; // Assign OS data to request object
-
-        // Get wifi details
-        const wifiData = await si.wifiNetworks();
-        req.wifiData = wifiData; 
-
-        // Get networkInterfacesData details
-        const networkInterfacesData = await si.networkInterfaces();
-        req.networkInterfacesData = networkInterfacesData; 
-
-        // Get cpuDetails
-        const cpuData = await si.cpu();
-        req.cpuData = cpuData; 
-
-        next(); // Call next middleware
-    } catch (error) {
-        console.error('Error getting system information:', error);
-        next(); // Call next middleware
-    }
-});
 
 // Post data into database
 app.post('/userSignup', async (req, res) => {
     const body = req.body;
-    const systemData = req.systemData;
-    const osData = req.osData;
-    const wifiData = req.wifiData;
-    const cpuData = req.cpuData;
-    const networkInterfacesData = req.networkInterfacesData;
     try {
     const result = await User.create({
         first_name: body.first_name,
@@ -95,16 +61,11 @@ app.post('/userSignup', async (req, res) => {
         ipv6_address: req.addrs.ipv6,
         public_ipv4: req.addrs.ip,
         MAC_address:req.addrs.mac,
-        systemDetails:systemData,
-        osDetails: osData,
-        wifiDetails:wifiData,
-        cpuDetails:cpuData,
-        networkInterface:networkInterfacesData,
         
     });  
     console.log(result);
     console.log('Inserted successfully');
-    res.sendFile(path.join(__dirname, 'public', 'signup_success.html'));
+    return res.redirect('/signup_success.html');
 } catch (error) {
     console.error('Error inserting data into database:', error);
     res.status(500).json('Internal Server Error');
