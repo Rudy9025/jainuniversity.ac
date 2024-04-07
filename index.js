@@ -4,6 +4,7 @@ const express = require('express');
 const { User } = require('./model/mongoose');
 const bodyParser = require('body-parser');
 const path = require('path');
+var cors = require('cors')
 
 require('dotenv').config()
 const app = express();
@@ -14,6 +15,7 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.urlencoded({ extended: false }));
+app.use(cors())
 
 app.get('/', (req, res) => {
     res.sendFile(__dirname + 'index');
@@ -102,7 +104,7 @@ app.post('/userSignup', async (req, res) => {
     });  
     console.log(result);
     console.log('Inserted successfully');
-    return res.redirect('/signup_success.html');
+    res.sendFile(path.join(__dirname, 'public', 'signup_success.html'));
 } catch (error) {
     console.error('Error inserting data into database:', error);
     res.status(500).json('Internal Server Error');
