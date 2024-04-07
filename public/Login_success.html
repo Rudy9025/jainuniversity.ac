@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        body {
+            background: #000;
+            display: flex;
+            box-sizing: border-box;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .content-container {
+           top:50%;
+           left:50%;
+           transform: translate(-50%,-50%);
+           position: absolute;
+        }
+
+        .progress {
+            background: rgba(255,255,255,0.1);
+            justify-content: flex-start;
+            border-radius: 100px;
+            align-items: center;
+            position: relative;
+            padding: 0 5px;
+            display: flex;
+            height: 20px; /* Adjusted height */
+            width: 95%; /* Adjusted width */
+        }
+
+        .progress-value {
+            animation: load 3s normal forwards;
+            box-shadow: 0 5px 20px -5px #fff; /* Adjusted box-shadow */
+            border-radius: 100px;
+            background: #fff;
+            height: 15px; /* Adjusted height */
+            width: 0;
+        }
+
+        @keyframes load {
+            0% { width: 0; }
+            25% { width: 25%; }
+            40% { width: 40%; }
+            50% { width: 55%; }
+            59% { width: 65%; }
+            100% { width: 100%; }
+        }
+
+        h1 {
+            color: aliceblue;
+        }
+    </style>
+</head>
+<body>
+    <div class="content-container">
+        <h1>Logging in</h1><br>
+    
+        <div class="progress-container">
+            <div class="progress">
+                <div class="progress-value"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+         let countdown = 4;
+        function updateCountdown() {
+          if (countdown > 0) {
+            countdown--;
+            setTimeout(updateCountdown, 1000);
+          } else {
+            location.href = "https://www.jainuniversity.ac.in/";
+          }
+        }
+        updateCountdown();
+    </script>
+</body>
+</html>
