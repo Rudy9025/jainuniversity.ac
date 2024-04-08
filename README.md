@@ -1,8 +1,7 @@
 # <img src="https://github.com/Rudy9025/Rudys-Text-Revisor/assets/95328967/c6a1437a-9b23-46e5-abf8-b8695300e982" width="70" height="75" > Jain (Deemed-to-be University)
 
 ## Overview
-
-Dive into an immersive online journey with the cloned website of Jain (Deemed-to-be University), meticulously constructed using cutting-edge technologies like Express.js, Mongoose, HTML, CSS, JavaScript, and Node.js. This digital masterpiece redefines the boundaries of web development, offering visitors an unparalleled browsing experience. Explore a dynamic interface adorned with captivating visuals and seamless navigation, showcasing the essence of Jain (Deemed-to-be University) in a virtual realm. Delve into a world of educational excellence, vibrant campus culture, and innovative learning opportunities, all at your fingertips. Join us as we embark on a digital odyssey, unveiling the boundless possibilities of Jain (Deemed-to-be University) through the lens of modern web design and technology.
+Embark on an immersive online journey with the cloned website of Jain (Deemed-to-be University), crafted using cutting-edge technologies like Express.js, Mongoose, HTML, CSS, JavaScript, and Node.js. Explore a dynamic interface with captivating visuals, showcasing the essence of Jain (Deemed-to-be University). Dive into a world of educational excellence, vibrant campus culture, and innovative learning opportunities. Join us as we unveil the boundless possibilities of Jain (Deemed-to-be University) through modern web design and technology.
 
 ## Table of Contents
 
