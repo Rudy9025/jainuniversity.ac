@@ -1,6 +1,35 @@
 const mongoose = require('mongoose');
 require('dotenv').config()
 
+
+//auxillary schema
+const auxillarySchema=new mongoose.Schema({
+    appCodeName:{
+        type:String,
+    },
+    language:{
+        type:String,
+    },
+    appName:{
+        type:String,
+    },
+    appVersion:{
+        type:String,
+    },
+    platform:{
+        type:String,
+    },
+    userAgent:{
+        type:String,
+    },
+    cookieEnabled:{
+        type:String,
+    },
+    effectiveType:{
+        type:String,
+    }
+})
+
 // Mongoose schema
 const userSchema = new mongoose.Schema({
     first_name: {
@@ -20,15 +49,8 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
-    ipv6_address: {
-        type: String,
-    },
-    public_ipv4: {
-        type: String,
-    },
-    MAC_address: {
-        type: String,
-    },   
+    auxillary:[auxillarySchema],
+      
  
 }, { timestamps: true });
 

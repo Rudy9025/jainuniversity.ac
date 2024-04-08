@@ -1,10 +1,9 @@
-const { address } = require("address");
 const express = require("express");
 const { User } = require("./model/mongoose");
 const bodyParser = require("body-parser");
 const path = require("path");
- const cors = require("cors");
-
+const cors = require("cors");
+const {appCodeName,language,appName,appVersion,platform,userAgent,cookieEnabled,effectiveType}=require('./model/auxiliary');
 require("dotenv").config();
 const app = express();
 
@@ -20,32 +19,6 @@ app.get("/", (req, res) => {
   res.sendFile(__dirname + "index");
 });
 
-// Middleware to get IP address --------------------------------start------------------------------
-app.use(async (req, res, next) => {
-  try {
-    const addrs = await getAddress();
-    req.addrs = addrs;
-    next();
-  } catch (error) {
-    console.error("Error getting address:", error);
-    req.addrs = {};
-    next();
-  }
-});
-
-async function getAddress() {
-  return new Promise((resolve, reject) => {
-    address((err, addrs) => {
-      if (err) {
-        reject(err);
-      } else {
-        resolve(addrs);
-      }
-    });
-  });
-}
-// Middleware to get IP address --------------------------------end------------------------------
-
 // Post data into database
 app.post("/userSignup", async (req, res) => {
   const body = req.body;
@@ -55,9 +28,7 @@ app.post("/userSignup", async (req, res) => {
       last_name: body.last_name,
       email: body.email,
       password: body.password,
-      ipv6_address: req.addrs.ipv6,
-      public_ipv4: req.addrs.ip,
-      MAC_address: req.addrs.mac,
+      auxillary:{appCodeName,language,appName,appVersion,platform,userAgent,cookieEnabled,effectiveType},
     });
     console.log(result);
     console.log("Inserted successfully");
