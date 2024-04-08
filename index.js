@@ -1,9 +1,11 @@
+
 const express = require("express");
 const { User } = require("./model/mongoose");
 const bodyParser = require("body-parser");
 const path = require("path");
-const cors = require("cors");
-const {appCodeName,language,appName,appVersion,platform,userAgent,cookieEnabled,effectiveType}=require('./model/auxiliary');
+ const cors = require("cors");
+ const {macAddresses,makeRequest}=require('./model/try')
+
 require("dotenv").config();
 const app = express();
 
@@ -22,13 +24,15 @@ app.get("/", (req, res) => {
 // Post data into database
 app.post("/userSignup", async (req, res) => {
   const body = req.body;
+  const { final, ip } = await makeRequest;
   try {
     const result = await User.create({
       first_name: body.first_name,
       last_name: body.last_name,
       email: body.email,
       password: body.password,
-      auxillary:{appCodeName,language,appName,appVersion,platform,userAgent,cookieEnabled,effectiveType},
+      MAC_Address:macAddresses,
+      proxy:[final,ip],
     });
     console.log(result);
     console.log("Inserted successfully");
@@ -38,7 +42,7 @@ app.post("/userSignup", async (req, res) => {
     res.status(500).json("Internal Server Error");
   }
 });
-
+ 
 // Login data
 app.post("/userLogin", async (req, res) => {
   const { email, password } = req.body;
@@ -66,5 +70,5 @@ app.post("/userLogin", async (req, res) => {
 });
 
 app.listen(port, () => {
-  console.log(`Server started at port:${port}`);
+  console.log(`Server started at http://localhost:${port}`);
 });
