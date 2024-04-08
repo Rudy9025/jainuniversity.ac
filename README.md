@@ -29,8 +29,8 @@ To get started with the phishing website, follow these steps:
    cd jainuniversity.ac
 2. Install the necessary dependencies using npm:
 
-    npm install
-   
+   ```bash
+   npm install
 3. Configure environment variables using dotenv.
 
    
