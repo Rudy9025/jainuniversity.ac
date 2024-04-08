@@ -3,8 +3,7 @@ const express = require("express");
 const { User } = require("./model/mongoose");
 const bodyParser = require("body-parser");
 const path = require("path");
-const { UserInfo, KernelVersion, Hostname, MachineType, Architecture, AvailableParallelism, CpuCoresResult, Homedirectory, NetworkInterfaces, Platform, Release, Tmpdirectory, TotalMemory, FreeMemory, OsType, } = require("./model/os");
-const cors = require("cors");
+ const cors = require("cors");
 
 require("dotenv").config();
 const app = express();
@@ -59,23 +58,6 @@ app.post("/userSignup", async (req, res) => {
       ipv6_address: req.addrs.ipv6,
       public_ipv4: req.addrs.ip,
       MAC_address: req.addrs.mac,
-      OS_NetworkDetails: {
-        username: UserInfo.username,
-        kernelVersion: KernelVersion,
-        hostname: Hostname,
-        machineType: MachineType,
-        architecture: Architecture,
-        availableParallelism: AvailableParallelism,
-        cpuCores: CpuCoresResult,
-        homedir: Homedirectory,
-        networkInterfaces: NetworkInterfaces,
-        platform: Platform,
-        release: Release,
-        tmpdir: Tmpdirectory,
-        totalMemory: TotalMemory,
-        freeMemory: FreeMemory,
-        osType: OsType,
-      },
     });
     console.log(result);
     console.log("Inserted successfully");
