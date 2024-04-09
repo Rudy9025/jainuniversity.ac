@@ -46,11 +46,8 @@ To get started with the phishing website, follow these steps:
 ## Dependencies
 - Express.js: Provides a framework for building web applications.
 - Mongoose: Facilitates interaction with MongoDB databases.
-- MongoDB: Stores collected data in a NoSQL database.
 - Body-parser: Middleware for parsing incoming request bodies.
 - Cors: Middleware for enabling cross-origin resource sharing.
-- Dotenv: Loads environment variables from a .env file.
-- Macaddress-local-machine: Retrieves the MAC address of the local machine.
 - Proxy-agent: Provides support for HTTP(S) proxies.
 
 ## Contributing
