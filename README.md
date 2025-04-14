@@ -1,58 +1,59 @@
-# <img src="https://github.com/Rudy9025/Rudys-Text-Revisor/assets/95328967/c6a1437a-9b23-46e5-abf8-b8695300e982" width="70" height="75" > Jain (Deemed-to-be University)
+# P
 
-## Overview
-Embark on an immersive online journey with the cloned website of Jain (Deemed-to-be University), crafted using cutting-edge technologies like Express.js, Mongoose, HTML, CSS, JavaScript, and Node.js. Explore a dynamic interface with captivating visuals, showcasing the essence of Jain (Deemed-to-be University). Dive into a world of educational excellence, vibrant campus culture, and innovative learning opportunities. Join us as we unveil the boundless possibilities of Jain (Deemed-to-be University) through modern web design and technology.
+This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.2.6.
 
-## Table of Contents
+## Development server
 
-- [Features](#features)
-- [Getting Started](#getting-started)
-- [Usage](#usage)
-- [Dependencies](#dependencies)
-- [Contributing](#contributing)
-- [License](#license)
+To start a local development server, run:
 
-## Features
+```bash
+ng serve
+```
 
-- Phishing website designed to gather login and signup credentials.
-- Collects MAC addresses and IP addresses of visitors.
-- Utilizes external and internal packages for enhanced functionality.
+Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
 
-## Getting Started
-To get started with the phishing website, follow these steps:
+## Code scaffolding
 
-1. Clone the repository:
+Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
 
-   ```bash
-   git clone https://github.com/Rudy9025/jainuniversity.ac.git
-   cd jainuniversity.ac
-2. Install the necessary dependencies using npm:
+```bash
+ng generate component component-name
+```
 
-   ```bash
-   npm install
-3. Configure environment variables using dotenv.
+For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
 
-   
-4. Run the server using Node.js.
-5. Access the website through a web browser.
+```bash
+ng generate --help
+```
 
-## Usage
+## Building
 
-- Users are directed to the phishing website via social engineering.
-- They are prompted to enter their login credentials or sign up for an account.
-- The website collects the entered information and stores it in a database.
-- Additionally, the MAC address and IP address of the visitor are logged.
+To build the project run:
 
-## Dependencies
-- Express.js: Provides a framework for building web applications.
-- Mongoose: Facilitates interaction with MongoDB databases.
-- Body-parser: Middleware for parsing incoming request bodies.
-- Cors: Middleware for enabling cross-origin resource sharing.
-- Proxy-agent: Provides support for HTTP(S) proxies.
+```bash
+ng build
+```
 
-## Contributing
-- Contributions to the phishing website project are welcome. Please fork the repository, make your changes, and submit a pull request.
+This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
 
-## License
-- This website project is licensed under the MIT License. See the LICENSE file for details.
+## Running unit tests
 
+To execute unit tests with the [Karma](https://karma-runner.github.io) test runner, use the following command:
+
+```bash
+ng test
+```
+
+## Running end-to-end tests
+
+For end-to-end (e2e) testing, run:
+
+```bash
+ng e2e
+```
+
+Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
+
+## Additional Resources
+
+For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
