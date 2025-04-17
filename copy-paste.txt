@@ -1,1 +1,4 @@
--Dmaven.wagon.http.ssl.insecure=true -Dmaven.wagon.http.ssl.allowall=true
+keytool -import -trustcacerts -alias jfrog-cert ^
+ -file "C:\path\to\jfrog.crt" ^
+ -keystore "C:\Program Files\Java\jdk-XX\lib\security\cacerts" ^
+ -storepass changeit
