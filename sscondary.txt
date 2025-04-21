@@ -1,70 +1,66 @@
-Great to hear everything is working! Now let’s implement the delete functionality — both frontend (Angular) and backend (Spring Boot) — to delete a row from the table based on its id when clicking a delete button.
+Great! Here’s how you can implement the edit and update functionality in Angular. This approach will allow you to click an “Edit” button that turns the row into editable inputs and changes the button to “Update”.
 
 ⸻
 
-1. Frontend (Angular)
+1. HTML Template (users.component.html)
 
-HTML (users.component.html)
+Assuming you are looping through users like this:
 
-Assuming you’ve already displayed the user data in a table:
+<tr *ngFor="let user of users">
+  <td *ngIf="editId !== user.id">{{ user.name }}</td>
+  <td *ngIf="editId === user.id">
+    <input [(ngModel)]="editUser.name" />
+  </td>
 
-<table>
-  <tr *ngFor="let user of users">
-    <td>{{ user.id }}</td>
-    <td>{{ user.name }}</td>
-    <td>{{ user.email }}</td>
-    <td>
-      <button (click)="deleteUser(user.id)">Delete</button>
-    </td>
-  </tr>
-</table>
+  <td *ngIf="editId !== user.id">{{ user.email }}</td>
+  <td *ngIf="editId === user.id">
+    <input [(ngModel)]="editUser.email" />
+  </td>
 
-Component (users.component.ts)
+  <td>
+    <button *ngIf="editId !== user.id" (click)="enableEdit(user)">Edit</button>
+    <button *ngIf="editId === user.id" (click)="updateUser(user.id)">Update</button>
+  </td>
+</tr>
 
-users: any[] = [];
 
-ngOnInit() {
-  this.userService.getUsers().subscribe(data => {
-    this.users = data;
-  });
+
+⸻
+
+2. Component Logic (users.component.ts)
+
+editId: number | null = null;
+editUser = { name: '', email: '' };
+
+enableEdit(user: any) {
+  this.editId = user.id;
+  this.editUser = { name: user.name, email: user.email };
 }
 
-deleteUser(id: number) {
-  this.userService.deleteUser(id).subscribe({
+updateUser(id: number) {
+  const updatedData = { ...this.editUser, id };
+
+  this.userService.updateUser(updatedData).subscribe({
     next: () => {
-      this.users = this.users.filter(user => user.id !== id);
-      console.log('User deleted');
+      this.editId = null;
+      this.getUsers(); // Refresh the list
     },
-    error: (err) => console.error('Error deleting user', err)
+    error: (err) => console.error('Update failed', err)
   });
 }
 
-Service (user.service.ts)
 
-deleteUser(id: number): Observable<any> {
-  return this.http.delete(`${this.apiUrl}/${id}`);
+
+⸻
+
+3. Service Method (user.service.ts)
+
+updateUser(user: any): Observable<any> {
+  return this.http.put(`${this.apiUrl}/${user.id}`, user);
 }
 
 
 
 ⸻
 
-2. Backend (Spring Boot)
-
-Controller
-
-@DeleteMapping("/users/{id}")
-public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-    userRepository.deleteById(id);
-    return ResponseEntity.noContent().build();
-}
-
-Repository
-
-Make sure your repository extends JpaRepository<User, Long>.
-
-⸻
-
-Now when you click the delete button, the row will be removed from both the database and the UI.
-
-Let me know if you want to add a confirmation dialog or toast message as well!
+Let me know if you’re using ReactiveForms instead of ngModel — I’ll adjust accordingly!
