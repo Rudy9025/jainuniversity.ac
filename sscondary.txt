@@ -1,8 +1,70 @@
-@Override
-public String toString() {
-    return "User{" +
-            "name='" + name + '\'' +
-            ", email='" + email + '\'' +
-            ", nodeId='" + nodeId + '\'' +
-            '}';
+Great to hear everything is working! Now let’s implement the delete functionality — both frontend (Angular) and backend (Spring Boot) — to delete a row from the table based on its id when clicking a delete button.
+
+⸻
+
+1. Frontend (Angular)
+
+HTML (users.component.html)
+
+Assuming you’ve already displayed the user data in a table:
+
+<table>
+  <tr *ngFor="let user of users">
+    <td>{{ user.id }}</td>
+    <td>{{ user.name }}</td>
+    <td>{{ user.email }}</td>
+    <td>
+      <button (click)="deleteUser(user.id)">Delete</button>
+    </td>
+  </tr>
+</table>
+
+Component (users.component.ts)
+
+users: any[] = [];
+
+ngOnInit() {
+  this.userService.getUsers().subscribe(data => {
+    this.users = data;
+  });
 }
+
+deleteUser(id: number) {
+  this.userService.deleteUser(id).subscribe({
+    next: () => {
+      this.users = this.users.filter(user => user.id !== id);
+      console.log('User deleted');
+    },
+    error: (err) => console.error('Error deleting user', err)
+  });
+}
+
+Service (user.service.ts)
+
+deleteUser(id: number): Observable<any> {
+  return this.http.delete(`${this.apiUrl}/${id}`);
+}
+
+
+
+⸻
+
+2. Backend (Spring Boot)
+
+Controller
+
+@DeleteMapping("/users/{id}")
+public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    userRepository.deleteById(id);
+    return ResponseEntity.noContent().build();
+}
+
+Repository
+
+Make sure your repository extends JpaRepository<User, Long>.
+
+⸻
+
+Now when you click the delete button, the row will be removed from both the database and the UI.
+
+Let me know if you want to add a confirmation dialog or toast message as well!
