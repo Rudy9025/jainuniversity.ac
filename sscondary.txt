@@ -1,59 +1,22 @@
-Great! Since you’re using Oracle with sequences, we need to:
-	1.	Create a sequence in the Oracle database (if not already present).
-	2.	Update your entity to use that sequence via @SequenceGenerator.
+package com.example.demo.config; // use your actual package name
 
-⸻
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
-1. Example Oracle Sequence
+@Configuration
+public class CorsConfig {
 
-Run this in Oracle SQL Developer (or wherever you manage DB):
-
-CREATE SEQUENCE user_seq
-START WITH 1
-INCREMENT BY 1
-NOCACHE;
-
-You can rename user_seq if needed.
-
-⸻
-
-2. Updated User Entity with Sequence
-
-import jakarta.persistence.*;
-
-@Entity
-@Table(name = "users") // Ensure this matches your Oracle table name
-public class User {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_gen")
-    @SequenceGenerator(name = "user_seq_gen", sequenceName = "user_seq", allocationSize = 1)
-    private Long id;
-
-    private String name;
-    private String email;
-
-    // Getters and Setters
+    @Bean
+    public WebMvcConfigurer corsConfigurer() {
+        return new WebMvcConfigurer() {
+            @Override
+            public void addCorsMappings(CorsRegistry registry) {
+                registry.addMapping("/**")
+                        .allowedOrigins("http://localhost:4200")
+                        .allowedMethods("*");
+            }
+        };
+    }
 }
-
-	•	sequenceName must match the sequence you created in Oracle.
-	•	allocationSize = 1 is safest for Oracle to avoid gaps.
-
-⸻
-
-3. application.properties (just to recap)
-
-spring.datasource.url=jdbc:oracle:thin:@//eurvlid25121.xmp.net.intra:1521/358fr305
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
-
-spring.jpa.database-platform=org.hibernate.dialect.Oracle12cDialect
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
-
-
-
-⸻
-
-Let me know if you want to fetch users, update them, or connect to a different sequence/table too!
