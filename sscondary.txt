@@ -1,62 +1,59 @@
-In Oracle, you cannot auto-generate primary key IDs without using a sequence, because unlike databases like MySQL or PostgreSQL, Oracle does not support AUTO_INCREMENT or SERIAL fields.
-
-However, you can simulate auto-generation in two ways:
-
-⸻
-
-1. Using a Sequence (Recommended & Standard)
-
-This is the correct and reliable method, as shown earlier, using:
-
-@GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "...")
-
-
+Great! Since you’re using Oracle with sequences, we need to:
+	1.	Create a sequence in the Oracle database (if not already present).
+	2.	Update your entity to use that sequence via @SequenceGenerator.
 
 ⸻
 
-2. Manually set the ID in your code
+1. Example Oracle Sequence
 
-If you do not want to use a sequence, then you must generate and set the ID manually before saving the entity:
+Run this in Oracle SQL Developer (or wherever you manage DB):
 
-User user = new User();
-user.setId(1001L); // You must manage uniqueness yourself
-user.setName("John");
-user.setEmail("john@example.com");
-userRepository.save(user);
+CREATE SEQUENCE user_seq
+START WITH 1
+INCREMENT BY 1
+NOCACHE;
 
-Drawback: You’ll have to track the latest ID value yourself to avoid conflicts — this is risky and not scalable.
-
-⸻
-
-3. Trigger + Sequence (DB-level solution)
-
-If you want the ID to be generated only at the DB level and not through JPA, you can:
-	•	Create a sequence.
-	•	Create a BEFORE INSERT trigger on the table to set the ID.
-
-Example:
-
-CREATE OR REPLACE TRIGGER users_before_insert
-BEFORE INSERT ON users
-FOR EACH ROW
-BEGIN
-  SELECT user_seq.NEXTVAL INTO :new.id FROM dual;
-END;
-
-Then in your entity, remove @GeneratedValue, just:
-
-@Id
-private Long id;
-
-But this way, the ID will be set by Oracle itself.
+You can rename user_seq if needed.
 
 ⸻
 
-Summary:
+2. Updated User Entity with Sequence
 
-Option	Needs Sequence?	Auto-incrementing	Recommended
-@GeneratedValue + @SequenceGenerator	Yes	Yes	Yes
-Manual ID setting	No	No	No (unsafe)
-DB Trigger + Sequence	Yes	Yes	Yes (if DB-only logic is preferred)
+import jakarta.persistence.*;
 
-Let me know which way you want to go — I can guide you through setup.
+@Entity
+@Table(name = "users") // Ensure this matches your Oracle table name
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "user_seq_gen")
+    @SequenceGenerator(name = "user_seq_gen", sequenceName = "user_seq", allocationSize = 1)
+    private Long id;
+
+    private String name;
+    private String email;
+
+    // Getters and Setters
+}
+
+	•	sequenceName must match the sequence you created in Oracle.
+	•	allocationSize = 1 is safest for Oracle to avoid gaps.
+
+⸻
+
+3. application.properties (just to recap)
+
+spring.datasource.url=jdbc:oracle:thin:@//eurvlid25121.xmp.net.intra:1521/358fr305
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
+
+spring.jpa.database-platform=org.hibernate.dialect.Oracle12cDialect
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+
+
+
+⸻
+
+Let me know if you want to fetch users, update them, or connect to a different sequence/table too!
