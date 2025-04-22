@@ -1,0 +1,97 @@
+Here’s a simple example of an Angular 18+ app that allows you to read an Excel file using xlsx and display its content in HTML.
+
+⸻
+
+Step 1: Install the required package
+
+In your Angular project directory, install xlsx:
+
+npm install xlsx
+
+
+
+⸻
+
+Step 2: Create a component (e.g., excel-reader)
+
+ng generate component excel-reader
+
+
+
+⸻
+
+Step 3: Modify excel-reader.component.ts
+
+import { Component } from '@angular/core';
+import * as XLSX from 'xlsx';
+
+@Component({
+  selector: 'app-excel-reader',
+  templateUrl: './excel-reader.component.html',
+  styleUrls: ['./excel-reader.component.css']
+})
+export class ExcelReaderComponent {
+  excelData: any[] = [];
+
+  onFileChange(event: any): void {
+    const target: DataTransfer = <DataTransfer>(event.target);
+
+    if (target.files.length !== 1) {
+      console.error('Cannot use multiple files');
+      return;
+    }
+
+    const reader: FileReader = new FileReader();
+
+    reader.onload = (e: any) => {
+      const binaryStr: string = e.target.result;
+      const workbook: XLSX.WorkBook = XLSX.read(binaryStr, { type: 'binary' });
+
+      const sheetName: string = workbook.SheetNames[0];
+      const worksheet: XLSX.WorkSheet = workbook.Sheets[sheetName];
+
+      this.excelData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); // Use header: 1 to get array of arrays
+    };
+
+    reader.readAsBinaryString(target.files[0]);
+  }
+}
+
+
+
+⸻
+
+Step 4: Update excel-reader.component.html
+
+<h2>Upload Excel File</h2>
+<input type="file" (change)="onFileChange($event)" accept=".xlsx, .xls" />
+
+<div *ngIf="excelData.length">
+  <h3>Excel Data:</h3>
+  <table border="1">
+    <tr *ngFor="let row of excelData">
+      <td *ngFor="let cell of row">{{ cell }}</td>
+    </tr>
+  </table>
+</div>
+
+
+
+⸻
+
+Step 5: Use the component in your app
+
+Add the component tag to app.component.html:
+
+<app-excel-reader></app-excel-reader>
+
+
+
+⸻
+
+This setup will:
+	•	Accept an Excel file from the user
+	•	Read the first sheet
+	•	Display the sheet contents in a table
+
+Let me know if you want to handle multiple sheets, style the table, or export back to Excel.
