@@ -1,66 +1,97 @@
-Great! Here’s how you can implement the edit and update functionality in Angular. This approach will allow you to click an “Edit” button that turns the row into editable inputs and changes the button to “Update”.
 
-⸻
-
-1. HTML Template (users.component.html)
-
-Assuming you are looping through users like this:
-
-<tr *ngFor="let user of users">
-  <td *ngIf="editId !== user.id">{{ user.name }}</td>
-  <td *ngIf="editId === user.id">
-    <input [(ngModel)]="editUser.name" />
-  </td>
-
-  <td *ngIf="editId !== user.id">{{ user.email }}</td>
-  <td *ngIf="editId === user.id">
-    <input [(ngModel)]="editUser.email" />
-  </td>
-
-  <td>
-    <button *ngIf="editId !== user.id" (click)="enableEdit(user)">Edit</button>
-    <button *ngIf="editId === user.id" (click)="updateUser(user.id)">Update</button>
-  </td>
-</tr>
-
-
-
-⸻
-
-2. Component Logic (users.component.ts)
-
-editId: number | null = null;
-editUser = { name: '', email: '' };
-
-enableEdit(user: any) {
-  this.editId = user.id;
-  this.editUser = { name: user.name, email: user.email };
-}
-
-updateUser(id: number) {
-  const updatedData = { ...this.editUser, id };
-
-  this.userService.updateUser(updatedData).subscribe({
-    next: () => {
-      this.editId = null;
-      this.getUsers(); // Refresh the list
-    },
-    error: (err) => console.error('Update failed', err)
-  });
-}
+<div>
+    <h2>Excel File Matching</h2>
+  
+    <label>Upload File 1:
+      <input type="file" (change)="onFileUpload($event, 1)">
+    </label>
+  
+    <label>Upload File 2:
+      <input type="file" (change)="onFileUpload($event, 2)">
+    </label>
+  
+    <div *ngIf="file1Columns.length && file2Columns.length">
+      <label>Select Column from File 1:
+        <select [(ngModel)]="selectedCol1">
+          <option *ngFor="let col of file1Columns" [value]="col">{{ col }}</option>
+        </select>
+      </label>
+  
+      <label>Select Column from File 2:
+        <select [(ngModel)]="selectedCol2">
+          <option *ngFor="let col of file2Columns" [value]="col">{{ col }}</option>
+        </select>
+      </label>
+  
+      <button (click)="compareColumns()">Compare</button>
+    </div>
+  
+    <table *ngIf="resultTable.length">
+      <thead>
+        <tr>
+          <th>File 1 - {{selectedCol1}}</th>
+          <th>File 2 - {{selectedCol2}}</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of resultTable">
+          <td>{{ row.value1 }}</td>
+          <td>{{ row.value2 }}</td>
+          <td>{{ row.status }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 
 
 
-⸻
-
-3. Service Method (user.service.ts)
-
-updateUser(user: any): Observable<any> {
-  return this.http.put(`${this.apiUrl}/${user.id}`, user);
-}
 
 
+import * as XLSX from 'xlsx';
 
-⸻
 
-Let me know if you’re using ReactiveForms instead of ngModel — I’ll adjust accordingly!
+file1Data: any[] = [];
+  file2Data: any[] = [];
+  file1Columns: string[] = [];
+  file2Columns: string[] = [];
+
+  selectedCol1 = '';
+  selectedCol2 = '';
+
+  resultTable: { value1: any, value2: any, status: string }[] = [];
+
+  onFileUpload(event: any, fileNumber: number) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+      if (fileNumber === 1) {
+        this.file1Data = jsonData;
+        this.file1Columns = Object.keys(jsonData[0] as Object);
+      } else {
+        this.file2Data = jsonData;
+        this.file2Columns = Object.keys(jsonData[0] as Object);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  compareColumns() {
+    this.resultTable = [];
+
+    const length = Math.max(this.file1Data.length, this.file2Data.length);
+
+    for (let i = 0; i < length; i++) {
+      const val1 = this.file1Data[i]?.[this.selectedCol1] || '';
+      const val2 = this.file2Data[i]?.[this.selectedCol2] || '';
+      const status = val1 === val2 ? 'Matched' : 'Mismatched';
+
+      this.resultTable.push({ value1: val1, value2: val2, status });
+    }
+  }
+
