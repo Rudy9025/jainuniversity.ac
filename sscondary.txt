@@ -1,97 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        .container {
+  max-width: 1000px;
+  margin: auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
 
-<div>
-    <h2>Excel File Matching</h2>
-  
-    <label>Upload File 1:
-      <input type="file" (change)="onFileUpload($event, 1)">
-    </label>
-  
-    <label>Upload File 2:
-      <input type="file" (change)="onFileUpload($event, 2)">
-    </label>
-  
-    <div *ngIf="file1Columns.length && file2Columns.length">
-      <label>Select Column from File 1:
-        <select [(ngModel)]="selectedCol1">
-          <option *ngFor="let col of file1Columns" [value]="col">{{ col }}</option>
-        </select>
-      </label>
-  
-      <label>Select Column from File 2:
-        <select [(ngModel)]="selectedCol2">
-          <option *ngFor="let col of file2Columns" [value]="col">{{ col }}</option>
-        </select>
-      </label>
-  
-      <button (click)="compareColumns()">Compare</button>
-    </div>
-  
-    <table *ngIf="resultTable.length">
-      <thead>
-        <tr>
-          <th>File 1 - {{selectedCol1}}</th>
-          <th>File 2 - {{selectedCol2}}</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of resultTable">
-          <td>{{ row.value1 }}</td>
-          <td>{{ row.value2 }}</td>
-          <td>{{ row.status }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  color: #2c3e50;
+}
 
+.upload-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+}
 
+.upload-box {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
 
+.upload-label {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}
 
+.count-summary {
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem;
+  background-color: #f7f7f7;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
 
-import * as XLSX from 'xlsx';
+.matched {
+  color: #2ecc71;
+  font-weight: bold;
+}
 
+.mismatched {
+  color: #e74c3c;
+  font-weight: bold;
+}
 
-file1Data: any[] = [];
-  file2Data: any[] = [];
-  file1Columns: string[] = [];
-  file2Columns: string[] = [];
+.column-select-section {
+  margin-bottom: 1.5rem;
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
 
-  selectedCol1 = '';
-  selectedCol2 = '';
+.column-select-section label {
+  display: flex;
+  flex-direction: column;
+  font-weight: bold;
+}
 
-  resultTable: { value1: any, value2: any, status: string }[] = [];
+button {
+  padding: 0.5rem 1rem;
+  background-color: #2980b9;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
 
-  onFileUpload(event: any, fileNumber: number) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+button:hover {
+  background-color: #3498db;
+}
 
-      if (fileNumber === 1) {
-        this.file1Data = jsonData;
-        this.file1Columns = Object.keys(jsonData[0] as Object);
-      } else {
-        this.file2Data = jsonData;
-        this.file2Columns = Object.keys(jsonData[0] as Object);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  }
+.result-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 1rem;
+}
 
-  compareColumns() {
-    this.resultTable = [];
+.result-table th, .result-table td {
+  border: 1px solid #ccc;
+  padding: 0.5rem;
+  text-align: left;
+}
 
-    const length = Math.max(this.file1Data.length, this.file2Data.length);
+.result-table th {
+  background-color: #f0f0f0;
+}
 
-    for (let i = 0; i < length; i++) {
-      const val1 = this.file1Data[i]?.[this.selectedCol1] || '';
-      const val2 = this.file2Data[i]?.[this.selectedCol2] || '';
-      const status = val1 === val2 ? 'Matched' : 'Mismatched';
+.result-table td.matched {
+  background-color: #e9f7ef;
+}
 
-      this.resultTable.push({ value1: val1, value2: val2, status });
-    }
-  }
+.result-table td.mismatched {
+  background-color: #fdecea;
+}
 
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="title">One to One Matching</h2>
+      
+        <div class="upload-section">
+          <div class="upload-box">
+            <label class="upload-label">Upload File 1:</label>
+            <input type="file" (change)="onFileUpload($event, 1)" />
+          </div>
+          <div class="upload-box">
+            <label class="upload-label">Upload File 2:</label>
+            <input type="file" (change)="onFileUpload($event, 2)" />
+          </div>
+        </div>
+      
+        <div *ngIf="resultTable.length" class="count-summary">
+          <span class="matched">Total Matched Count: {{ matchedCount }}</span>
+          <span class="mismatched">Total Mismatched Count: {{ mismatchedCount }}</span>
+        </div>
+      
+        <div *ngIf="file1Columns.length && file2Columns.length" class="column-select-section">
+          <label>
+            Select Column from File 1:
+            <select [(ngModel)]="selectedCol1">
+              <option *ngFor="let col of file1Columns" [value]="col">{{ col }}</option>
+            </select>
+          </label>
+      
+          <label>
+            Select Column from File 2:
+            <select [(ngModel)]="selectedCol2">
+              <option *ngFor="let col of file2Columns" [value]="col">{{ col }}</option>
+            </select>
+          </label>
+      
+          <button (click)="compareColumns()">Compare</button>
+        </div>
+      
+        <div *ngIf="resultTable.length">
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>File 1 - {{ selectedCol1 }}</th>
+                <th>File 2 - {{ selectedCol2 }}</th>
+                <th>Status</th>
+                <th>Index</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of resultTable">
+                <td>{{ row.value1 }}</td>
+                <td>{{ row.value2 }}</td>
+                <td [ngClass]="{'matched': row.status === 'Matched', 'mismatched': row.status === 'Mismatched'}">{{ row.status }}</td>
+                <td>{{ row.index }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+</body>
+</html>
