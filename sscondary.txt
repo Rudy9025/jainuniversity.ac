@@ -172,3 +172,168 @@ button:hover {
       
 </body>
 </html>
+
+
+
+
+
+
+
+
+
+
+
+
+import { CommonModule } from '@angular/common';
+import { Component } from '@angular/core';
+import { FormsModule, NgForm } from '@angular/forms';
+import { Router } from '@angular/router';
+import * as XLSX from 'xlsx';
+
+@Component({
+  selector: 'app-ngclass',
+  imports: [FormsModule,CommonModule],
+  templateUrl: './ngclass.component.html',
+  styleUrl: './ngclass.component.css'
+})
+export class NgclassComponent {
+
+
+
+file1Data: any[] = [];
+  file2Data: any[] = [];
+  file1Columns: string[] = [];
+  file2Columns: string[] = [];
+
+  selectedCol1 = '';
+  selectedCol2 = '';
+
+  resultTable: { value1: any, value2: any, status: string }[] = [];
+
+  onFileUpload(event: any, fileNumber: number) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = (e: any) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+      if (fileNumber === 1) {
+        this.file1Data = jsonData;
+        this.file1Columns = Object.keys(jsonData[0] as Object);
+      } else {
+        this.file2Data = jsonData;
+        this.file2Columns = Object.keys(jsonData[0] as Object);
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  compareColumns() {
+    this.resultTable = [];
+
+    const length = Math.max(this.file1Data.length, this.file2Data.length);
+
+    for (let i = 0; i < length; i++) {
+      const val1 = this.file1Data[i]?.[this.selectedCol1] || '';
+      const val2 = this.file2Data[i]?.[this.selectedCol2] || '';
+      const status = val1 === val2 ? 'Matched' : 'Mismatched';
+
+      this.resultTable.push({ value1: val1, value2: val2, status });
+    }
+  }
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+<!-- <div class="container">
+
+<form (ngSubmit)="FormSubmit(Formref)" #Formref="ngForm">
+
+<input type="text" name="name" [(ngModel)]="userForm.name" placeholder="Enter name" #nameRef="ngModel" required/>
+<p *ngIf="nameRef.errors?.['required'] && nameRef.touched">Name is required</p>
+<input type="text" name="email" [(ngModel)]="userForm.email" placeholder="Enter email" required #emailref="ngModel"/>
+<p *ngIf="emailref.errors?.['required'] && emailref.touched">Email is required</p>
+
+<input type="number" name="age" [(ngModel)]="userForm.age" placeholder="Enter age" #ageref="ngModel" required min="1"/>
+<p *ngIf="ageref.errors?.['required'] && ageref.touched">Age is required</p>
+<p *ngIf="ageref.errors?.['min']">Age is required</p>
+
+
+
+<button type="submit" [disabled] ="!Formref.valid"> Submit</button>
+
+</form>
+
+</div> -->
+
+
+
+<div>
+    <h2>Excel File Matching</h2>
+  
+    <label>Upload File 1:
+      <input type="file" (change)="onFileUpload($event, 1)">
+    </label>
+  
+    <label>Upload File 2:
+      <input type="file" (change)="onFileUpload($event, 2)">
+    </label>
+  
+    <div *ngIf="file1Columns.length && file2Columns.length">
+      <label>Select Column from File 1:
+        <select [(ngModel)]="selectedCol1">
+          <option *ngFor="let col of file1Columns" [value]="col">{{ col }}</option>
+        </select>
+      </label>
+  
+      <label>Select Column from File 2:
+        <select [(ngModel)]="selectedCol2">
+          <option *ngFor="let col of file2Columns" [value]="col">{{ col }}</option>
+        </select>
+      </label>
+  
+      <button (click)="compareColumns()">Compare</button>
+    </div>
+  
+    <table *ngIf="resultTable.length">
+      <thead>
+        <tr>
+          <th>File 1 - {{selectedCol1}}</th>
+          <th>File 2 - {{selectedCol2}}</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let row of resultTable">
+          <td>{{ row.value1 }}</td>
+          <td>{{ row.value2 }}</td>
+          <td>{{ row.status }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+
+
+
+
+
+
+
+
+
+
+
