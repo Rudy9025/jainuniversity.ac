@@ -67,3 +67,84 @@ public class FileCompareController {
         throw new IllegalArgumentException("Column '" + columnName + "' not found");
     }
 }
+
+
+
+
+
+
+
+package com.example.demo.controller;
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.io.*;
+import java.util.*;
+
+@RestController
+public class FileCompareController {
+
+    @GetMapping("/compare-agreement-search-newcode")
+    public List<Map<String, Object>> compareAgreementAgainstNewCodeColumn() throws IOException {
+        File file1 = new File("C:\\Users\\YourName\\Downloads\\file1.csv");
+        File file2 = new File("C:\\Users\\YourName\\Downloads\\file2.csv");
+
+        List<String[]> data1 = readCSV(file1);
+        List<String[]> data2 = readCSV(file2);
+
+        if (data1.isEmpty() || data2.isEmpty()) return Collections.emptyList();
+
+        int agreementIndex = getColumnIndex(data1.get(0), "agreement_name");
+        int newCodeIndex = getColumnIndex(data2.get(0), "new_code");
+
+        // Map for fast lookup: lowercase new_code -> row index in file2
+        Map<String, Integer> newCodeToIndexMap = new HashMap<>();
+        for (int i = 1; i < data2.size(); i++) {
+            String val = data2.get(i)[newCodeIndex].trim().toLowerCase();
+            newCodeToIndexMap.put(val, i);
+        }
+
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        for (int i = 1; i < data1.size(); i++) {
+            String agreementValue = data1.get(i)[agreementIndex].trim();
+            String lowerValue = agreementValue.toLowerCase();
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("agreement_name", agreementValue);
+
+            if (newCodeToIndexMap.containsKey(lowerValue)) {
+                row.put("status", "Matched");
+                row.put("index", newCodeToIndexMap.get(lowerValue)); // index from file2
+            } else {
+                row.put("status", "MisMatched");
+                row.put("index", -1);
+            }
+
+            results.add(row);
+        }
+
+        return results;
+    }
+
+    private List<String[]> readCSV(File file) throws IOException {
+        List<String[]> rows = new ArrayList<>();
+        BufferedReader br = new BufferedReader(new FileReader(file));
+        String line;
+        while ((line = br.readLine()) != null) {
+            rows.add(line.split(",", -1));
+        }
+        br.close();
+        return rows;
+    }
+
+    private int getColumnIndex(String[] headers, String columnName) {
+        for (int i = 0; i < headers.length; i++) {
+            if (headers[i].trim().equalsIgnoreCase(columnName)) {
+                return i;
+            }
+        }
+        throw new IllegalArgumentException("Column '" + columnName + "' not found");
+    }
+}
