@@ -9,26 +9,43 @@ import java.util.*;
 @RestController
 public class FileCompareController {
 
-    @GetMapping("/compare-columns")
-    public List<Map<String, Object>> compareByAgreementAndNewCode() throws IOException {
-        // File paths (update these paths to your local file location)
+    @GetMapping("/compare-agreement-search-newcode")
+    public List<Map<String, Object>> compareAgreementAgainstNewCodeColumn() throws IOException {
         File file1 = new File("C:\\Users\\YourName\\Downloads\\file1.csv");
         File file2 = new File("C:\\Users\\YourName\\Downloads\\file2.csv");
 
-        // Read both files into rows
         List<String[]> data1 = readCSV(file1);
         List<String[]> data2 = readCSV(file2);
 
-        // Get header row and find index of specific columns
-        int index1 = getColumnIndex(data1.get(0), "agreement_name");
-        int index2 = getColumnIndex(data2.get(0), "new_code");
+        if (data1.isEmpty() || data2.isEmpty()) return Collections.emptyList();
 
-        // Remove headers before processing
-        data1.remove(0);
-        data2.remove(0);
+        int agreementIndex = getColumnIndex(data1.get(0), "agreement_name");
+        int newCodeIndex = getColumnIndex(data2.get(0), "new_code");
 
-        // Use Angular-style comparison logic
-        return compareColumnsRowWise(data1, data2, index1, index2);
+        // Extract just the values for new_code column into a Set (lowercased for case-insensitive matching)
+        Set<String> newCodeSet = new HashSet<>();
+        for (int i = 1; i < data2.size(); i++) {
+            String val = data2.get(i)[newCodeIndex].trim().toLowerCase();
+            newCodeSet.add(val);
+        }
+
+        List<Map<String, Object>> results = new ArrayList<>();
+
+        for (int i = 1; i < data1.size(); i++) {
+            String agreementValue = data1.get(i)[agreementIndex].trim();
+            String lowerValue = agreementValue.toLowerCase();
+
+            String status = newCodeSet.contains(lowerValue) ? "Matched" : "MisMatched";
+
+            Map<String, Object> row = new HashMap<>();
+            row.put("index", i);
+            row.put("agreement_name", agreementValue);
+            row.put("status", status);
+
+            results.add(row);
+        }
+
+        return results;
     }
 
     private List<String[]> readCSV(File file) throws IOException {
@@ -48,27 +65,5 @@ public class FileCompareController {
             }
         }
         throw new IllegalArgumentException("Column '" + columnName + "' not found");
-    }
-
-    private List<Map<String, Object>> compareColumnsRowWise(List<String[]> data1, List<String[]> data2, int col1, int col2) {
-        List<Map<String, Object>> results = new ArrayList<>();
-        int maxLen = Math.max(data1.size(), data2.size());
-
-        for (int i = 0; i < maxLen; i++) {
-            String val1 = (i < data1.size() && col1 < data1.get(i).length) ? data1.get(i)[col1] : "";
-            String val2 = (i < data2.size() && col2 < data2.get(i).length) ? data2.get(i)[col2] : "";
-
-            String status = val1.trim().equalsIgnoreCase(val2.trim()) ? "Matched" : "MisMatched";
-
-            Map<String, Object> row = new HashMap<>();
-            row.put("index", i + 1);
-            row.put("value1", val1);
-            row.put("value2", val2);
-            row.put("status", status);
-
-            results.add(row);
-        }
-
-        return results;
     }
 }
