@@ -1,11 +1,50 @@
-import pandas as pd
+Great! Thunder Client works just like Postman and is perfect for testing this Spring Boot API.
 
-# Load your CSV file
-df = pd.read_csv("your_file.csv")  # Replace with the actual file path
+Here’s exactly how to use Thunder Client with the /compare API:
 
-# Create the new column
-df['CRDS Party + 3 + Post Direction'] = df['CRDS Party Code'].astype(str) + '3' + df['Post Direction'].astype(str)
+⸻
 
-# Save to a new file or view the result
-df.to_csv("updated_file.csv", index=False)
-print(df[['CRDS Party Code', 'Post Direction', 'CRDS Party + 3 + Post Direction']].head())
+Step-by-Step: Send Request in Thunder Client
+	1.	Method: POST
+	2.	URL: http://localhost:8080/compare
+	3.	Tab: Go to the Body tab
+	4.	Select: Form (NOT JSON or Text)
+
+⸻
+
+Add Form Fields:
+
+Key	Value	Type
+file1	Select your first CSV file	File
+file2	Select your second CSV file	File
+col1	Column index from file1 (e.g. 1)	Text
+col2	Column index from file2 (e.g. 2)	Text
+
+Column indexes are 0-based. So first column = 0, second = 1, etc.
+
+⸻
+
+Hit “Send”
+
+You’ll get a JSON response like:
+
+[
+  {
+    "index": 1,
+    "value1": "Apple",
+    "value2": "apple",
+    "status": "Matched"
+  },
+  {
+    "index": 2,
+    "value1": "Orange",
+    "value2": "Banana",
+    "status": "MisMatched"
+  }
+]
+
+
+
+⸻
+
+Let me know if you want to enhance the output (e.g. match count summary, CSV download, or column name support).
