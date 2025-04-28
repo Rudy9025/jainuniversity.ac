@@ -29,3 +29,46 @@ compareColumns() {
   this.matchedCount = this.resultTable.filter(row => row.status === 'Matched').length;
   this.mismatchedCount = this.resultTable.filter(row => row.status === 'MisMatched').length;
 }
+
+
+
+
+
+compareColumns() {
+  this.resultTable = [];
+
+  const col1values = this.file1Data.map(row => row[this.selectedCol1]);
+  const col2values = this.file2Data.map(row => row[this.selectedCol2]);
+
+  for (let i = 0; i < col1values.length; i++) {
+    const val1 = col1values[i];
+
+    // Count in file1
+    const countInFile1 = col1values.filter(v => 
+      String(v).toLowerCase().trim() === String(val1).toLowerCase().trim()
+    ).length;
+
+    // Count in file2
+    const countInFile2 = col2values.filter(v => 
+      String(v).toLowerCase().trim() === String(val1).toLowerCase().trim()
+    ).length;
+
+    let status = "MisMatched"; // default
+
+    // If exactly one match in both sides
+    if (countInFile1 === 1 && countInFile2 === 1) {
+      status = "Matched";
+    }
+
+    this.resultTable.push({
+      value1: val1,
+      value2: (status === "Matched") ? val1 : "",
+      status: status,
+      index: i,
+    });
+  }
+
+  this.matchedCount = this.resultTable.filter(row => row.status === 'Matched').length;
+  this.mismatchedCount = this.resultTable.filter(row => row.status === 'MisMatched').length;
+}
+
