@@ -148,3 +148,88 @@ public class FileCompareController {
         throw new IllegalArgumentException("Column '" + columnName + "' not found");
     }
 }
+
+
+
+
+You’re getting this error:
+
+TS2307: Cannot find module 'primeng/config' or its corresponding type declarations.
+
+This happens because PrimeNG v17+ uses a new modular structure, and you’re likely missing proper setup or version mismatch.
+
+⸻
+
+Step-by-Step: Setup PrimeNG with Angular 17
+
+1. Install PrimeNG, PrimeIcons, and PrimeFlex
+
+In your terminal, run:
+
+npm install primeng primeicons primeflex
+
+
+
+⸻
+
+2. Check PrimeNG Version Compatibility
+
+Make sure you’re using a PrimeNG version compatible with Angular 17 (e.g., 17.0.x):
+
+npm list primeng
+
+If not, you can install the latest PrimeNG 17:
+
+npm install primeng@latest
+
+
+
+⸻
+
+3. Fix Import for PrimeNG Config
+
+In PrimeNG 17, the PrimeNGConfig should be imported like this:
+
+import { PrimeNGConfig } from 'primeng/api';
+
+So update your import line in app.component.ts:
+
+// Old (incorrect):
+// import { PrimeNG } from 'primeng/config';
+
+// Correct:
+import { PrimeNGConfig } from 'primeng/api';
+
+And update your constructor accordingly:
+
+constructor(private primengConfig: PrimeNGConfig) {}
+
+ngOnInit() {
+  this.primengConfig.ripple = true;
+}
+
+
+
+⸻
+
+4. Add Required CSS Files
+
+Update your angular.json under "styles":
+
+"styles": [
+  "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
+  "node_modules/primeng/resources/primeng.min.css",
+  "node_modules/primeicons/primeicons.css",
+  "node_modules/primeflex/primeflex.css",
+  "src/styles.css"
+]
+
+
+
+⸻
+
+Once these are in place, restart your dev server:
+
+ng serve
+
+Let me know if you’d like help adding specific components like buttons, dropdowns, or tables!
