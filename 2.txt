@@ -1,339 +1,99 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <style>
-        .container {
-  max-width: 1000px;
-  margin: auto;
-  padding: 2rem;
-  font-family: 'Segoe UI', sans-serif;
-  color: #333;
-}
+Thanks for sharing the details. Here’s how you can pass the selected column names (selectedCol1 and selectedCol2) from the frontend to the backend and use them in the ReconciliationService instead of hardcoded "Agreement_name" and "CRDS Party Code".
 
-.title {
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #2c3e50;
-}
+⸻
 
-.upload-section {
-  display: flex;
-  justify-content: space-between;
-  gap: 2rem;
-  margin-bottom: 1.5rem;
-}
+1. Frontend (Angular) Changes
 
-.upload-box {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-}
+Ensure that you are sending selectedCol1 and selectedCol2 from the Angular component:
 
-.upload-label {
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-}
+match.component.ts
 
-.count-summary {
-  margin-bottom: 1rem;
-  font-size: 1rem;
-  display: flex;
-  justify-content: space-between;
-  padding: 0.5rem;
-  background-color: #f7f7f7;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-}
+Update the compareColumns() method:
 
-.matched {
-  color: #2ecc71;
-  font-weight: bold;
-}
-
-.mismatched {
-  color: #e74c3c;
-  font-weight: bold;
-}
-
-.column-select-section {
-  margin-bottom: 1.5rem;
-  display: flex;
-  gap: 1.5rem;
-  align-items: center;
-}
-
-.column-select-section label {
-  display: flex;
-  flex-direction: column;
-  font-weight: bold;
-}
-
-button {
-  padding: 0.5rem 1rem;
-  background-color: #2980b9;
-  color: #fff;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #3498db;
-}
-
-.result-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-}
-
-.result-table th, .result-table td {
-  border: 1px solid #ccc;
-  padding: 0.5rem;
-  text-align: left;
-}
-
-.result-table th {
-  background-color: #f0f0f0;
-}
-
-.result-table td.matched {
-  background-color: #e9f7ef;
-}
-
-.result-table td.mismatched {
-  background-color: #fdecea;
-}
-
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h2 class="title">One to One Matching</h2>
-      
-        <div class="upload-section">
-          <div class="upload-box">
-            <label class="upload-label">Upload File 1:</label>
-            <input type="file" (change)="onFileUpload($event, 1)" />
-          </div>
-          <div class="upload-box">
-            <label class="upload-label">Upload File 2:</label>
-            <input type="file" (change)="onFileUpload($event, 2)" />
-          </div>
-        </div>
-      
-        <div *ngIf="resultTable.length" class="count-summary">
-          <span class="matched">Total Matched Count: {{ matchedCount }}</span>
-          <span class="mismatched">Total Mismatched Count: {{ mismatchedCount }}</span>
-        </div>
-      
-        <div *ngIf="file1Columns.length && file2Columns.length" class="column-select-section">
-          <label>
-            Select Column from File 1:
-            <select [(ngModel)]="selectedCol1">
-              <option *ngFor="let col of file1Columns" [value]="col">{{ col }}</option>
-            </select>
-          </label>
-      
-          <label>
-            Select Column from File 2:
-            <select [(ngModel)]="selectedCol2">
-              <option *ngFor="let col of file2Columns" [value]="col">{{ col }}</option>
-            </select>
-          </label>
-      
-          <button (click)="compareColumns()">Compare</button>
-        </div>
-      
-        <div *ngIf="resultTable.length">
-          <table class="result-table">
-            <thead>
-              <tr>
-                <th>File 1 - {{ selectedCol1 }}</th>
-                <th>File 2 - {{ selectedCol2 }}</th>
-                <th>Status</th>
-                <th>Index</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let row of resultTable">
-                <td>{{ row.value1 }}</td>
-                <td>{{ row.value2 }}</td>
-                <td [ngClass]="{'matched': row.status === 'Matched', 'mismatched': row.status === 'Mismatched'}">{{ row.status }}</td>
-                <td>{{ row.index }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-</body>
-</html>
-
-
-
-
-
-
-
-
-
-
-
-
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { FormsModule, NgForm } from '@angular/forms';
-import { Router } from '@angular/router';
-import * as XLSX from 'xlsx';
-
-@Component({
-  selector: 'app-ngclass',
-  imports: [FormsModule,CommonModule],
-  templateUrl: './ngclass.component.html',
-  styleUrl: './ngclass.component.css'
-})
-export class NgclassComponent {
-
-
-
-file1Data: any[] = [];
-  file2Data: any[] = [];
-  file1Columns: string[] = [];
-  file2Columns: string[] = [];
-
-  selectedCol1 = '';
-  selectedCol2 = '';
-
-  resultTable: { value1: any, value2: any, status: string }[] = [];
-
-  onFileUpload(event: any, fileNumber: number) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = (e: any) => {
-      const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
-      const sheet = workbook.Sheets[workbook.SheetNames[0]];
-      const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
-
-      if (fileNumber === 1) {
-        this.file1Data = jsonData;
-        this.file1Columns = Object.keys(jsonData[0] as Object);
-      } else {
-        this.file2Data = jsonData;
-        this.file2Columns = Object.keys(jsonData[0] as Object);
-      }
-    };
-    reader.readAsArrayBuffer(file);
-  }
-
-  compareColumns() {
-    this.resultTable = [];
-
-    const length = Math.max(this.file1Data.length, this.file2Data.length);
-
-    for (let i = 0; i < length; i++) {
-      const val1 = this.file1Data[i]?.[this.selectedCol1] || '';
-      const val2 = this.file2Data[i]?.[this.selectedCol2] || '';
-      const status = val1 === val2 ? 'Matched' : 'Mismatched';
-
-      this.resultTable.push({ value1: val1, value2: val2, status });
+compareColumns() {
+  this.data = {
+    selectedCol1: this.selectedCol1,
+    selectedCol2: this.selectedCol2
+  };
+  
+  this.oneToOneService.oneToOne(this.data).subscribe({
+    next: (res) => {
+      console.log("Posted successfully", res);
+    },
+    error: (e) => {
+      console.log(e, "error");
     }
-  }
+  });
+}
 
+match.service.ts
 
+This part is already correct:
 
+oneToOne(data: any): Observable<any> {
+  return this.http.post(this.apiUrl, data);
 }
 
 
 
+⸻
+
+2. Backend (Spring Boot) Changes
+
+We will:
+	•	Accept a JSON with selectedCol1 and selectedCol2 via @RequestBody
+	•	Modify ReconciliationService to use these dynamically
+
+⸻
+
+ReconciliationController.java
+
+Update your @PostMapping method:
+
+@PostMapping("/reconcile")
+public ReconciliationResult receiveColumnNames(@RequestBody Map<String, String> data) {
+    String col1 = data.get("selectedCol1");
+    String col2 = data.get("selectedCol2");
+
+    String algoPath = "C:\\Users\\h59275\\Downloads\\algo.csv";
+    String starPath = "C:\\Users\\h59275\\Downloads\\star.csv";
+
+    return service.reconcile(algoPath, starPath, col1, col2);
+}
 
 
 
+⸻
 
+ReconciliationService.java
 
+Change your method signature:
 
+public ReconciliationResult reconcile(String algoPath, String starPath, String col1, String col2) {
 
+Then replace these lines:
 
-<!-- <div class="container">
+String key = record.get("Agreement_name")
 
-<form (ngSubmit)="FormSubmit(Formref)" #Formref="ngForm">
+with:
 
-<input type="text" name="name" [(ngModel)]="userForm.name" placeholder="Enter name" #nameRef="ngModel" required/>
-<p *ngIf="nameRef.errors?.['required'] && nameRef.touched">Name is required</p>
-<input type="text" name="email" [(ngModel)]="userForm.email" placeholder="Enter email" required #emailref="ngModel"/>
-<p *ngIf="emailref.errors?.['required'] && emailref.touched">Email is required</p>
+String key = record.get(col1)
 
-<input type="number" name="age" [(ngModel)]="userForm.age" placeholder="Enter age" #ageref="ngModel" required min="1"/>
-<p *ngIf="ageref.errors?.['required'] && ageref.touched">Age is required</p>
-<p *ngIf="ageref.errors?.['min']">Age is required</p>
+And:
 
+String key = record.get("CRDS Party Code").replaceAll("\\s", "") + 
+             record.get("Post Direction").replaceAll("\\s", "");
 
+with:
 
-<button type="submit" [disabled] ="!Formref.valid"> Submit</button>
+String key = record.get(col2).replaceAll("\\s", "");
 
-</form>
+Note: You’ll need to remove the Post Direction logic if it’s not being passed from frontend. If still needed, you can also send selectedCol3 from frontend and retrieve it similarly.
 
-</div> -->
+⸻
 
+Summary
 
+You’re replacing hardcoded column names (Agreement_name, CRDS Party Code) with dynamic values (selectedCol1, selectedCol2) coming from the frontend. You modified the backend controller to receive these and the service layer to use them while reading the CSV files.
 
-<div>
-    <h2>Excel File Matching</h2>
-  
-    <label>Upload File 1:
-      <input type="file" (change)="onFileUpload($event, 1)">
-    </label>
-  
-    <label>Upload File 2:
-      <input type="file" (change)="onFileUpload($event, 2)">
-    </label>
-  
-    <div *ngIf="file1Columns.length && file2Columns.length">
-      <label>Select Column from File 1:
-        <select [(ngModel)]="selectedCol1">
-          <option *ngFor="let col of file1Columns" [value]="col">{{ col }}</option>
-        </select>
-      </label>
-  
-      <label>Select Column from File 2:
-        <select [(ngModel)]="selectedCol2">
-          <option *ngFor="let col of file2Columns" [value]="col">{{ col }}</option>
-        </select>
-      </label>
-  
-      <button (click)="compareColumns()">Compare</button>
-    </div>
-  
-    <table *ngIf="resultTable.length">
-      <thead>
-        <tr>
-          <th>File 1 - {{selectedCol1}}</th>
-          <th>File 2 - {{selectedCol2}}</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let row of resultTable">
-          <td>{{ row.value1 }}</td>
-          <td>{{ row.value2 }}</td>
-          <td>{{ row.status }}</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-
-
-
-
-
-
-
-
-
-
-
-
+Do you want me to provide the full updated ReconciliationService.java with these changes applied?
