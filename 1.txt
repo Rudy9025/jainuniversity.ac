@@ -1,235 +1,141 @@
+Thanks for sharing all the images. I understand you’re trying to send selected column data from your Angular frontend to a Spring Boot backend using a POST request.
+
+Here’s a corrected and clean version of both the frontend (Angular) and backend (Spring Boot) code to make the data flow work properly.
+
+⸻
+
+✅ Frontend (Angular)
+
+match.component.ts
+
+Fix how filename1 and filename2 are set:
+
+onFileUpload(event: any, fileNumber: number) {
+  const file = event.target.files[0];
+  const reader = new FileReader();
+
+  reader.onload = (e: any) => {
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data, { type: 'array' });
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+    if (fileNumber === 1) {
+      this.file1Data = jsonData;
+      this.file1Columns = Object.keys(jsonData[0] as Object);
+      this.filename1 = file.name;
+    } else {
+      this.file2Data = jsonData;
+      this.file2Columns = Object.keys(jsonData[0] as Object);
+      this.filename2 = file.name;
+    }
+  };
+
+  reader.readAsArrayBuffer(file);
+}
+
+compareColumns() method
+
+Make sure the data you’re sending is an object, not just an array:
+
+compareColumns() {
+  const payload = {
+    selectedCol1: this.selectedCol1,
+    selectedCol2: this.selectedCol2
+  };
+
+  this.oneToOneService.oneToOne(payload).subscribe({
+    next: (res) => {
+      console.log("Posted successfully", res);
+    },
+    error: (e) => {
+      console.error("Error occurred", e);
+    }
+  });
+}
+
+
+
+⸻
+
+match.service.ts
+
+No changes needed, but just for clarity:
+
+@Injectable({
+  providedIn: 'root'
+})
+export class MatchService {
+  private apiUrl = 'http://localhost:8080/api/reconcile';
+
+  constructor(private http: HttpClient) {}
+
+  oneToOne(data: any): Observable<any> {
+    return this.http.post(this.apiUrl, data);
+  }
+}
+
+
+
+⸻
+
+✅ Backend (Spring Boot)
+
+You need to:
+	1.	Change RequestBody type to a proper DTO.
+	2.	Accept JSON data.
+
+Create a DTO class:
+
+package com.example.demo.model;
+
+public class ColumnRequest {
+    private String selectedCol1;
+    private String selectedCol2;
+
+    // Getters and Setters
+    public String getSelectedCol1() {
+        return selectedCol1;
+    }
+
+    public void setSelectedCol1(String selectedCol1) {
+        this.selectedCol1 = selectedCol1;
+    }
+
+    public String getSelectedCol2() {
+        return selectedCol2;
+    }
+
+    public void setSelectedCol2(String selectedCol2) {
+        this.selectedCol2 = selectedCol2;
+    }
+}
+
+Update your Controller:
+
 package com.example.demo.controller;
 
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.*;
-import java.util.*;
+import com.example.demo.model.ColumnRequest;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-public class FileCompareController {
+@RequestMapping("/api")
+public class ReconciliationController {
 
-    @GetMapping("/compare-agreement-search-newcode")
-    public List<Map<String, Object>> compareAgreementAgainstNewCodeColumn() throws IOException {
-        File file1 = new File("C:\\Users\\YourName\\Downloads\\file1.csv");
-        File file2 = new File("C:\\Users\\YourName\\Downloads\\file2.csv");
-
-        List<String[]> data1 = readCSV(file1);
-        List<String[]> data2 = readCSV(file2);
-
-        if (data1.isEmpty() || data2.isEmpty()) return Collections.emptyList();
-
-        int agreementIndex = getColumnIndex(data1.get(0), "agreement_name");
-        int newCodeIndex = getColumnIndex(data2.get(0), "new_code");
-
-        // Extract just the values for new_code column into a Set (lowercased for case-insensitive matching)
-        Set<String> newCodeSet = new HashSet<>();
-        for (int i = 1; i < data2.size(); i++) {
-            String val = data2.get(i)[newCodeIndex].trim().toLowerCase();
-            newCodeSet.add(val);
-        }
-
-        List<Map<String, Object>> results = new ArrayList<>();
-
-        for (int i = 1; i < data1.size(); i++) {
-            String agreementValue = data1.get(i)[agreementIndex].trim();
-            String lowerValue = agreementValue.toLowerCase();
-
-            String status = newCodeSet.contains(lowerValue) ? "Matched" : "MisMatched";
-
-            Map<String, Object> row = new HashMap<>();
-            row.put("index", i);
-            row.put("agreement_name", agreementValue);
-            row.put("status", status);
-
-            results.add(row);
-        }
-
-        return results;
-    }
-
-    private List<String[]> readCSV(File file) throws IOException {
-        List<String[]> rows = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String line;
-        while ((line = br.readLine()) != null) {
-            rows.add(line.split(",", -1));
-        }
-        return rows;
-    }
-
-    private int getColumnIndex(String[] headers, String columnName) {
-        for (int i = 0; i < headers.length; i++) {
-            if (headers[i].trim().equalsIgnoreCase(columnName)) {
-                return i;
-            }
-        }
-        throw new IllegalArgumentException("Column '" + columnName + "' not found");
+    @PostMapping("/reconcile")
+    public String receiveColumnNames(@RequestBody ColumnRequest data) {
+        return "Received columns: " + data.getSelectedCol1() + ", " + data.getSelectedCol2();
     }
 }
 
 
 
-
-
-
-
-package com.example.demo.controller;
-
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.io.*;
-import java.util.*;
-
-@RestController
-public class FileCompareController {
-
-    @GetMapping("/compare-agreement-search-newcode")
-    public List<Map<String, Object>> compareAgreementAgainstNewCodeColumn() throws IOException {
-        File file1 = new File("C:\\Users\\YourName\\Downloads\\file1.csv");
-        File file2 = new File("C:\\Users\\YourName\\Downloads\\file2.csv");
-
-        List<String[]> data1 = readCSV(file1);
-        List<String[]> data2 = readCSV(file2);
-
-        if (data1.isEmpty() || data2.isEmpty()) return Collections.emptyList();
-
-        int agreementIndex = getColumnIndex(data1.get(0), "agreement_name");
-        int newCodeIndex = getColumnIndex(data2.get(0), "new_code");
-
-        // Map for fast lookup: lowercase new_code -> row index in file2
-        Map<String, Integer> newCodeToIndexMap = new HashMap<>();
-        for (int i = 1; i < data2.size(); i++) {
-            String val = data2.get(i)[newCodeIndex].trim().toLowerCase();
-            newCodeToIndexMap.put(val, i);
-        }
-
-        List<Map<String, Object>> results = new ArrayList<>();
-
-        for (int i = 1; i < data1.size(); i++) {
-            String agreementValue = data1.get(i)[agreementIndex].trim();
-            String lowerValue = agreementValue.toLowerCase();
-
-            Map<String, Object> row = new HashMap<>();
-            row.put("agreement_name", agreementValue);
-
-            if (newCodeToIndexMap.containsKey(lowerValue)) {
-                row.put("status", "Matched");
-                row.put("index", newCodeToIndexMap.get(lowerValue)); // index from file2
-            } else {
-                row.put("status", "MisMatched");
-                row.put("index", -1);
-            }
-
-            results.add(row);
-        }
-
-        return results;
-    }
-
-    private List<String[]> readCSV(File file) throws IOException {
-        List<String[]> rows = new ArrayList<>();
-        BufferedReader br = new BufferedReader(new FileReader(file));
-        String line;
-        while ((line = br.readLine()) != null) {
-            rows.add(line.split(",", -1));
-        }
-        br.close();
-        return rows;
-    }
-
-    private int getColumnIndex(String[] headers, String columnName) {
-        for (int i = 0; i < headers.length; i++) {
-            if (headers[i].trim().equalsIgnoreCase(columnName)) {
-                return i;
-            }
-        }
-        throw new IllegalArgumentException("Column '" + columnName + "' not found");
-    }
-}
-
-
-
-
-You’re getting this error:
-
-TS2307: Cannot find module 'primeng/config' or its corresponding type declarations.
-
-This happens because PrimeNG v17+ uses a new modular structure, and you’re likely missing proper setup or version mismatch.
-
 ⸻
 
-Step-by-Step: Setup PrimeNG with Angular 17
+Test the Flow
+	•	Upload two files.
+	•	Select columns.
+	•	Click compare (calls compareColumns()).
+	•	Spring Boot should log and respond with the column names sent from Angular.
 
-1. Install PrimeNG, PrimeIcons, and PrimeFlex
-
-In your terminal, run:
-
-npm install primeng primeicons primeflex
-
-
-
-⸻
-
-2. Check PrimeNG Version Compatibility
-
-Make sure you’re using a PrimeNG version compatible with Angular 17 (e.g., 17.0.x):
-
-npm list primeng
-
-If not, you can install the latest PrimeNG 17:
-
-npm install primeng@latest
-
-
-
-⸻
-
-3. Fix Import for PrimeNG Config
-
-In PrimeNG 17, the PrimeNGConfig should be imported like this:
-
-import { PrimeNGConfig } from 'primeng/api';
-
-So update your import line in app.component.ts:
-
-// Old (incorrect):
-// import { PrimeNG } from 'primeng/config';
-
-// Correct:
-import { PrimeNGConfig } from 'primeng/api';
-
-And update your constructor accordingly:
-
-constructor(private primengConfig: PrimeNGConfig) {}
-
-ngOnInit() {
-  this.primengConfig.ripple = true;
-}
-
-
-
-⸻
-
-4. Add Required CSS Files
-
-Update your angular.json under "styles":
-
-"styles": [
-  "node_modules/primeng/resources/themes/lara-light-blue/theme.css",
-  "node_modules/primeng/resources/primeng.min.css",
-  "node_modules/primeicons/primeicons.css",
-  "node_modules/primeflex/primeflex.css",
-  "src/styles.css"
-]
-
-
-
-⸻
-
-Once these are in place, restart your dev server:
-
-ng serve
-
-Let me know if you’d like help adding specific components like buttons, dropdowns, or tables!
+Would you like help displaying the result on the Angular UI as well?
