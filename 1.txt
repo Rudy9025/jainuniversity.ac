@@ -1,65 +1,93 @@
-Great! Since you’re using Angular on the frontend and Spring Boot on the backend, here’s a complete working example of how to:
-	1.	Connect Spring Boot to Oracle DB.
-	2.	Validate UID and password.
-	3.	Return response to Angular.
-	4.	Route to /home if valid, else show an alert.
+Thanks for sharing your setup. Based on your existing code and database table (devusers with uid and password), here’s a complete working example of the Spring Boot backend for validating login credentials:
 
 ⸻
 
-1. Spring Boot - Backend
+1. Login.java (Model)
 
-pom.xml (add Oracle JDBC driver)
+Make sure the uid field is marked as @Id because JPA requires a primary key:
 
-<dependency>
-    <groupId>com.oracle.database.jdbc</groupId>
-    <artifactId>ojdbc8</artifactId>
-    <version>19.3.0.0</version>
-</dependency>
+package com.example.demo.model;
 
-application.properties
-
-spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
-spring.datasource.username=your_username
-spring.datasource.password=your_password
-spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
-spring.jpa.hibernate.ddl-auto=none
-
-Entity
+import jakarta.persistence.*;
 
 @Entity
 @Table(name = "devusers")
-public class DevUser {
+public class Login {
+
     @Id
+    @Column
     private String uid;
+
+    @Column
     private String password;
 
-    // Getters and setters
+    public String getUid() {
+        return uid;
+    }
+
+    public void setUid(String uid) {
+        this.uid = uid;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    @Override
+    public String toString() {
+        return "User{uid='" + uid + "', password='" + password + "'}";
+    }
 }
 
-Repository
 
-@Repository
-public interface DevUserRepository extends JpaRepository<DevUser, String> {
-    Optional<DevUser> findByUidAndPassword(String uid, String password);
+
+⸻
+
+2. LoginRepository.java
+
+Add a custom method to find a user by uid and password:
+
+package com.example.demo.repository;
+
+import com.example.demo.model.Login;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface LoginRepository extends JpaRepository<Login, String> {
+    Login findByUidAndPassword(String uid, String password);
 }
 
-Controller
+
+
+⸻
+
+3. LoginController.java
+
+package com.example.demo.controller;
+
+import com.example.demo.model.Login;
+import com.example.demo.repository.LoginRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/auth")
-@CrossOrigin(origins = "http://localhost:4200") // Allow Angular frontend
-public class AuthController {
+@RequestMapping("/api")
+@CrossOrigin(origins = "*") // allow Angular to access the backend
+public class LoginController {
 
     @Autowired
-    private DevUserRepository repository;
+    private LoginRepository loginRepository;
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody DevUser user) {
-        Optional<DevUser> found = repository.findByUidAndPassword(user.getUid(), user.getPassword());
-        if (found.isPresent()) {
-            return ResponseEntity.ok("Login successful");
+    public String loginUser(@RequestBody Login login) {
+        Login found = loginRepository.findByUidAndPassword(login.getUid(), login.getPassword());
+        if (found != null) {
+            return "success";
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+            return "invalid";
         }
     }
 }
@@ -68,33 +96,23 @@ public class AuthController {
 
 ⸻
 
-2. Angular - Frontend
+4. Angular Side (Service Example)
 
-login.component.ts
+Make sure your Angular code posts to the backend like this:
 
-uid: string = '';
-password: string = '';
-
-constructor(private http: HttpClient, private router: Router) {}
-
-onLogin() {
-  this.http.post('http://localhost:8080/api/auth/login', {
-    uid: this.uid,
-    password: this.password
-  }, { responseType: 'text' }).subscribe({
-    next: () => this.router.navigateByUrl('home'),
-    error: () => alert('Invalid UID or Password')
-  });
-}
-
-login.component.html
-
-<input type="text" placeholder="UID" [(ngModel)]="uid" class="betterOutline" />
-<input type="password" placeholder="Password" [(ngModel)]="password" class="betterOutline" />
-<button (click)="onLogin()">Submit</button>
+this.http.post('http://localhost:8080/api/login', {
+  uid: this.uid,
+  password: this.password
+}).subscribe((res: any) => {
+  if (res === 'success') {
+    this.router.navigateByUrl('/home');
+  } else {
+    alert('Invalid credentials');
+  }
+});
 
 
 
 ⸻
 
-Let me know if you want to secure passwords using hashing or add a registration page too.
+Let me know if you want help integrating this with Angular form or error handling.
