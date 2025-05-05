@@ -1,141 +1,100 @@
-Thanks for sharing all the images. I understand you’re trying to send selected column data from your Angular frontend to a Spring Boot backend using a POST request.
-
-Here’s a corrected and clean version of both the frontend (Angular) and backend (Spring Boot) code to make the data flow work properly.
+Great! Since you’re using Angular on the frontend and Spring Boot on the backend, here’s a complete working example of how to:
+	1.	Connect Spring Boot to Oracle DB.
+	2.	Validate UID and password.
+	3.	Return response to Angular.
+	4.	Route to /home if valid, else show an alert.
 
 ⸻
 
-✅ Frontend (Angular)
+1. Spring Boot - Backend
 
-match.component.ts
+pom.xml (add Oracle JDBC driver)
 
-Fix how filename1 and filename2 are set:
+<dependency>
+    <groupId>com.oracle.database.jdbc</groupId>
+    <artifactId>ojdbc8</artifactId>
+    <version>19.3.0.0</version>
+</dependency>
 
-onFileUpload(event: any, fileNumber: number) {
-  const file = event.target.files[0];
-  const reader = new FileReader();
+application.properties
 
-  reader.onload = (e: any) => {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const jsonData = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+spring.datasource.url=jdbc:oracle:thin:@localhost:1521:xe
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+spring.datasource.driver-class-name=oracle.jdbc.OracleDriver
+spring.jpa.hibernate.ddl-auto=none
 
-    if (fileNumber === 1) {
-      this.file1Data = jsonData;
-      this.file1Columns = Object.keys(jsonData[0] as Object);
-      this.filename1 = file.name;
-    } else {
-      this.file2Data = jsonData;
-      this.file2Columns = Object.keys(jsonData[0] as Object);
-      this.filename2 = file.name;
-    }
-  };
+Entity
 
-  reader.readAsArrayBuffer(file);
+@Entity
+@Table(name = "devusers")
+public class DevUser {
+    @Id
+    private String uid;
+    private String password;
+
+    // Getters and setters
 }
 
-compareColumns() method
+Repository
 
-Make sure the data you’re sending is an object, not just an array:
+@Repository
+public interface DevUserRepository extends JpaRepository<DevUser, String> {
+    Optional<DevUser> findByUidAndPassword(String uid, String password);
+}
 
-compareColumns() {
-  const payload = {
-    selectedCol1: this.selectedCol1,
-    selectedCol2: this.selectedCol2
-  };
+Controller
 
-  this.oneToOneService.oneToOne(payload).subscribe({
-    next: (res) => {
-      console.log("Posted successfully", res);
-    },
-    error: (e) => {
-      console.error("Error occurred", e);
+@RestController
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = "http://localhost:4200") // Allow Angular frontend
+public class AuthController {
+
+    @Autowired
+    private DevUserRepository repository;
+
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody DevUser user) {
+        Optional<DevUser> found = repository.findByUidAndPassword(user.getUid(), user.getPassword());
+        if (found.isPresent()) {
+            return ResponseEntity.ok("Login successful");
+        } else {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
+        }
     }
+}
+
+
+
+⸻
+
+2. Angular - Frontend
+
+login.component.ts
+
+uid: string = '';
+password: string = '';
+
+constructor(private http: HttpClient, private router: Router) {}
+
+onLogin() {
+  this.http.post('http://localhost:8080/api/auth/login', {
+    uid: this.uid,
+    password: this.password
+  }, { responseType: 'text' }).subscribe({
+    next: () => this.router.navigateByUrl('home'),
+    error: () => alert('Invalid UID or Password')
   });
 }
 
+login.component.html
 
-
-⸻
-
-match.service.ts
-
-No changes needed, but just for clarity:
-
-@Injectable({
-  providedIn: 'root'
-})
-export class MatchService {
-  private apiUrl = 'http://localhost:8080/api/reconcile';
-
-  constructor(private http: HttpClient) {}
-
-  oneToOne(data: any): Observable<any> {
-    return this.http.post(this.apiUrl, data);
-  }
-}
+<input type="text" placeholder="UID" [(ngModel)]="uid" class="betterOutline" />
+<input type="password" placeholder="Password" [(ngModel)]="password" class="betterOutline" />
+<button (click)="onLogin()">Submit</button>
 
 
 
 ⸻
 
-✅ Backend (Spring Boot)
-
-You need to:
-	1.	Change RequestBody type to a proper DTO.
-	2.	Accept JSON data.
-
-Create a DTO class:
-
-package com.example.demo.model;
-
-public class ColumnRequest {
-    private String selectedCol1;
-    private String selectedCol2;
-
-    // Getters and Setters
-    public String getSelectedCol1() {
-        return selectedCol1;
-    }
-
-    public void setSelectedCol1(String selectedCol1) {
-        this.selectedCol1 = selectedCol1;
-    }
-
-    public String getSelectedCol2() {
-        return selectedCol2;
-    }
-
-    public void setSelectedCol2(String selectedCol2) {
-        this.selectedCol2 = selectedCol2;
-    }
-}
-
-Update your Controller:
-
-package com.example.demo.controller;
-
-import com.example.demo.model.ColumnRequest;
-import org.springframework.web.bind.annotation.*;
-
-@RestController
-@RequestMapping("/api")
-public class ReconciliationController {
-
-    @PostMapping("/reconcile")
-    public String receiveColumnNames(@RequestBody ColumnRequest data) {
-        return "Received columns: " + data.getSelectedCol1() + ", " + data.getSelectedCol2();
-    }
-}
-
-
-
-⸻
-
-Test the Flow
-	•	Upload two files.
-	•	Select columns.
-	•	Click compare (calls compareColumns()).
-	•	Spring Boot should log and respond with the column names sent from Angular.
-
-Would you like help displaying the result on the Angular UI as well?
+Let me know if you want to secure passwords using hashing or add a registration page too.
