@@ -1,99 +1,75 @@
-Thanks for sharing the details. Here’s how you can pass the selected column names (selectedCol1 and selectedCol2) from the frontend to the backend and use them in the ReconciliationService instead of hardcoded "Agreement_name" and "CRDS Party Code".
+What you just described is exactly what the custom query in your LoginRepository is doing, just written in Java with JPA syntax instead of raw SQL.
+
+But if you want the most direct SQL-like approach, here’s how to write native SQL instead of JPQL:
 
 ⸻
 
-1. Frontend (Angular) Changes
+✅ Modified LoginRepository with Native SQL Query:
 
-Ensure that you are sending selectedCol1 and selectedCol2 from the Angular component:
+package com.example.demo.repository;
 
-match.component.ts
+import com.example.demo.model.Login;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
-Update the compareColumns() method:
+@Repository
+public interface LoginRepository extends JpaRepository<Login, Long> {
 
-compareColumns() {
-  this.data = {
-    selectedCol1: this.selectedCol1,
-    selectedCol2: this.selectedCol2
-  };
-  
-  this.oneToOneService.oneToOne(this.data).subscribe({
-    next: (res) => {
-      console.log("Posted successfully", res);
-    },
-    error: (e) => {
-      console.log(e, "error");
+    @Query(value = "SELECT * FROM devusers WHERE uid = :uid AND password = :password", nativeQuery = true)
+    Login login(@Param("uid") Long uid, @Param("password") String password);
+}
+
+
+
+⸻
+
+✅ Controller to check credentials:
+
+package com.example.demo.controller;
+
+import com.example.demo.model.Login;
+import com.example.demo.repository.LoginRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api")
+public class LoginController {
+
+    @Autowired
+    private LoginRepository loginRepository;
+
+    @PostMapping("/login")
+    public String login(@RequestBody Login login) {
+        Login result = loginRepository.login(login.getUid(), login.getPassword());
+
+        if (result != null) {
+            return "success";
+        } else {
+            return "invalid credentials";
+        }
     }
-  });
-}
-
-match.service.ts
-
-This part is already correct:
-
-oneToOne(data: any): Observable<any> {
-  return this.http.post(this.apiUrl, data);
 }
 
 
 
 ⸻
 
-2. Backend (Spring Boot) Changes
+Notes:
+	•	You are now running this SQL:
 
-We will:
-	•	Accept a JSON with selectedCol1 and selectedCol2 via @RequestBody
-	•	Modify ReconciliationService to use these dynamically
+SELECT * FROM devusers WHERE uid = ? AND password = ?
 
-⸻
 
-ReconciliationController.java
+	•	The result is checked. If a row is found, you return "success", else "invalid credentials".
+	•	Make sure your Login.java entity class has @Id on uid, like this:
 
-Update your @PostMapping method:
-
-@PostMapping("/reconcile")
-public ReconciliationResult receiveColumnNames(@RequestBody Map<String, String> data) {
-    String col1 = data.get("selectedCol1");
-    String col2 = data.get("selectedCol2");
-
-    String algoPath = "C:\\Users\\h59275\\Downloads\\algo.csv";
-    String starPath = "C:\\Users\\h59275\\Downloads\\star.csv";
-
-    return service.reconcile(algoPath, starPath, col1, col2);
-}
+@Id
+@Column(name = "uid")
+private Long uid;
 
 
 
-⸻
-
-ReconciliationService.java
-
-Change your method signature:
-
-public ReconciliationResult reconcile(String algoPath, String starPath, String col1, String col2) {
-
-Then replace these lines:
-
-String key = record.get("Agreement_name")
-
-with:
-
-String key = record.get(col1)
-
-And:
-
-String key = record.get("CRDS Party Code").replaceAll("\\s", "") + 
-             record.get("Post Direction").replaceAll("\\s", "");
-
-with:
-
-String key = record.get(col2).replaceAll("\\s", "");
-
-Note: You’ll need to remove the Post Direction logic if it’s not being passed from frontend. If still needed, you can also send selectedCol3 from frontend and retrieve it similarly.
-
-⸻
-
-Summary
-
-You’re replacing hardcoded column names (Agreement_name, CRDS Party Code) with dynamic values (selectedCol1, selectedCol2) coming from the frontend. You modified the backend controller to receive these and the service layer to use them while reading the CSV files.
-
-Do you want me to provide the full updated ReconciliationService.java with these changes applied?
+Do you want this to return JSON instead of plain text?
