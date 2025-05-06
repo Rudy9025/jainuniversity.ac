@@ -1,75 +1,138 @@
-What you just described is exactly what the custom query in your LoginRepository is doing, just written in Java with JPA syntax instead of raw SQL.
+The error ReferenceError: window is not defined typically occurs when running an application in a server-side rendering (SSR) environment or during build time, where the window object is not available (e.g., Angular Universal or Node.js).
 
-But if you want the most direct SQL-like approach, here’s how to write native SQL instead of JPQL:
-
-⸻
-
-✅ Modified LoginRepository with Native SQL Query:
-
-package com.example.demo.repository;
-
-import com.example.demo.model.Login;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
-import org.springframework.stereotype.Repository;
-
-@Repository
-public interface LoginRepository extends JpaRepository<Login, Long> {
-
-    @Query(value = "SELECT * FROM devusers WHERE uid = :uid AND password = :password", nativeQuery = true)
-    Login login(@Param("uid") Long uid, @Param("password") String password);
-}
-
-
+Here’s how to debug and resolve this issue step by step:
 
 ⸻
 
-✅ Controller to check credentials:
+1. Identify the Source of the Error
 
-package com.example.demo.controller;
+From the error message, the problem seems to originate from a library or code that directly references window. Check the following:
+	1.	Your node_modules includes a library that uses window (e.g., AG Grid, PrimeNG, or Bootstrap JS).
+	2.	Your code might be referencing window directly without a check.
 
-import com.example.demo.model.Login;
-import com.example.demo.repository.LoginRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+⸻
 
-@RestController
-@RequestMapping("/api")
-public class LoginController {
+2. Fix AG Grid SSR Issues
 
-    @Autowired
-    private LoginRepository loginRepository;
+AG Grid might attempt to access window during SSR. To prevent this, use the isPlatformBrowser utility provided by Angular to ensure browser-only code runs client-side.
 
-    @PostMapping("/login")
-    public String login(@RequestBody Login login) {
-        Login result = loginRepository.login(login.getUid(), login.getPassword());
+Install Angular Common (if not already installed):
 
-        if (result != null) {
-            return "success";
-        } else {
-            return "invalid credentials";
-        }
+npm install @angular/common
+
+Modify the Component:
+
+Update your MatchComponent to handle browser-specific logic:
+
+import { Component, Inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
+
+@Component({
+  selector: 'app-match',
+  templateUrl: './match.component.html',
+  styleUrls: ['./match.component.css'],
+})
+export class MatchComponent {
+  isBrowser: boolean;
+
+  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+    this.isBrowser = isPlatformBrowser(this.platformId);
+  }
+
+  ngOnInit() {
+    if (this.isBrowser) {
+      // Browser-specific code here
     }
+  }
+}
+
+This ensures that any code that requires window is executed only on the browser.
+
+⸻
+
+3. Lazy Load AG Grid
+
+AG Grid might try to execute scripts at load time, causing SSR issues. To fix this, lazy load AG Grid:
+
+Dynamic Import Example:
+
+import { Component, OnInit } from '@angular/core';
+
+@Component({
+  selector: 'app-match',
+  templateUrl: './match.component.html',
+  styleUrls: ['./match.component.css'],
+})
+export class MatchComponent implements OnInit {
+  agGrid: any;
+
+  async ngOnInit() {
+    if (typeof window !== 'undefined') {
+      const agGridModule = await import('@ag-grid-community/angular');
+      this.agGrid = agGridModule.AgGridAngular;
+    }
+  }
 }
 
 
 
 ⸻
 
-Notes:
-	•	You are now running this SQL:
+4. PrimeNG and Third-Party Libraries
 
-SELECT * FROM devusers WHERE uid = ? AND password = ?
+Issue with PrimeNG
+
+PrimeNG components might internally use window. To handle this, ensure you use browser-specific guards, as shown in Step 2.
+
+Other Libraries
+
+Check the package.json for libraries (e.g., Bootstrap JS or PrimeNG modules) that might use window. Use isPlatformBrowser or lazy loading to handle them safely.
+
+⸻
+
+5. Update Dependencies
+
+Ensure all dependencies are up-to-date and compatible with Angular 17:
+
+npm update
+
+Specific versions:
+	•	@ag-grid-community/angular: 33.2.4
+	•	@ag-grid-community/core: 33.2.5
+	•	primeng: 17.0.0
+	•	primeicons: 6.0.0
+
+⸻
+
+6. Debug SSR or Vite Configuration
+
+If you’re using Vite with Angular, adjust the vite.config.ts file to polyfill browser globals like window:
+
+import { defineConfig } from 'vite';
+
+export default defineConfig({
+  define: {
+    'process.env': {},
+    global: 'window', // Add this to polyfill `window`
+  },
+});
 
 
-	•	The result is checked. If a row is found, you return "success", else "invalid credentials".
-	•	Make sure your Login.java entity class has @Id on uid, like this:
 
-@Id
-@Column(name = "uid")
-private Long uid;
+⸻
+
+7. Test and Validate
+	1.	Run your application locally to verify the fix:
+
+ng serve
+
+
+	2.	If you are using SSR, test with:
+
+npm run build:ssr && npm run serve:ssr
 
 
 
-Do you want this to return JSON instead of plain text?
+⸻
+
+Let me know if additional clarification is needed!
