@@ -1,67 +1,62 @@
-To ensure your sidebar is displayed properly and looks professional across all components, we need to address both styling and structure. Here’s how to fix it:
+You’re absolutely right—creating multiple toggle functions becomes repetitive as the number of checkboxes grows. To simplify, you can generalize the toggle logic using a key-based approach.
 
-⸻
+Refactored Solution (Reusable Function)
 
-1. sidebar.component.css
+1. Component TS
 
-Replace your current CSS with this improved version:
+Use a signal-based Record<string, boolean> map:
 
-.container {
-  position: fixed;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  z-index: 1000;
-  display: flex;
-  justify-content: flex-end;
-  height: 100vh;
-  width: 100%;
-  pointer-events: none;
+checkboxStates = signal<Record<string, boolean>>({
+  FO: false,
+  BO: false,
+});
+
+toggleCheckbox(key: string) {
+  this.checkboxStates.update(state => ({
+    ...state,
+    [key]: !state[key],
+  }));
 }
 
-.container > p-sidebar {
-  width: 25rem !important; /* Adjust width as needed */
-  max-width: 90%;
-  pointer-events: all;
+isChecked(key: string): boolean {
+  return this.checkboxStates()[key];
 }
 
 
 
 ⸻
 
-2. sidebar.component.html
+2. Component HTML
 
-Update the structure to:
+Use the same method and signal for both checkboxes:
 
-<div class="container">
-  <p-sidebar 
-    [(visible)]="sidebarVisible1" 
-    styleClass="w-100" 
-    [baseZIndex]="1000" 
-    [dismissable]="true" 
-    position="right">
-    
-    <ng-template pTemplate="header">
-      <span class="font-semibold text-xl">Sidebar</span>
-    </ng-template>
+<main>
+  <div class="upload">
+    <pre>Exclusion rules</pre>
+    <div class="container">
+      <mat-checkbox
+        [checked]="isChecked('FO')"
+        (change)="toggleCheckbox('FO')"
+      >
+        FO
+      </mat-checkbox>
+    </div>
 
-    <p>
-      Lorem ipsum dolor sit amet, consectetur adipiscing elit...
-    </p>
-    
-  </p-sidebar>
-
-  <p-button (click)="onSidebarClick()" icon="pi pi-arrow-right"></p-button>
-</div>
+    <div class="container">
+      <mat-checkbox
+        [checked]="isChecked('BO')"
+        (change)="toggleCheckbox('BO')"
+      >
+        BO
+      </mat-checkbox>
+    </div>
+  </div>
+</main>
 
 
 
 ⸻
 
-3. General Notes
-	•	Ensure the sidebar opens with sufficient width (25rem or more).
-	•	pointer-events in .container ensures only the sidebar is interactable.
-	•	dismissable="true" allows users to click outside to close it.
-	•	Adjust width in % or rem based on your design.
+Now you can easily add more checkboxes without writing new functions.
 
-Would you like me to provide matching TypeScript changes or animations as well?
+Would you like this scalable with dynamic rendering (e.g. from an array of keys like ['FO', 'BO', 'CO'])?
