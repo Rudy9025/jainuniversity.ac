@@ -1,236 +1,62 @@
-Here’s a step-by-step guide to set up AG Grid with Angular in a new or existing Angular project. This includes installing dependencies, configuring the grid, and implementing a basic grid with features like sorting, filtering, and custom overlays.
+To dynamically adjust the number of rows shown in a <p-table> (PrimeNG table) based on screen height in Angular, you can bind the [rows] input to a variable and calculate its value at runtime based on the screen height.
+
+Here’s how you can do it:
 
 ⸻
 
-Step 1: Install Dependencies
+Step 1: Update Component Code (TypeScript)
 
-Run the following commands to install AG Grid for Angular:
-
-npm install @ag-grid-community/angular @ag-grid-community/core --save
-
-To include styling, install the AG Grid themes:
-
-npm install ag-grid-angular --save
-
-
-
-⸻
-
-Step 2: Import AG Grid Module
-
-In your AppModule (or relevant module file), import the AgGridModule:
-
-import { NgModule } from '@angular/core';
-import { BrowserModule } from '@angular/platform-browser';
-import { AppComponent } from './app.component';
-import { AgGridModule } from '@ag-grid-community/angular';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    BrowserModule,
-    AgGridModule.withComponents([]), // Specify custom components if needed
-  ],
-  providers: [],
-  bootstrap: [AppComponent],
-})
-export class AppModule {}
-
-
-
-⸻
-
-Step 3: Add AG Grid Styles
-
-Include the AG Grid theme in your angular.json file under the "styles" section:
-
-"styles": [
-  "node_modules/@ag-grid-community/core/styles/ag-grid.css",
-  "node_modules/@ag-grid-community/core/styles/ag-theme-alpine.css"
-]
-
-You can replace ag-theme-alpine with other themes such as ag-theme-balham or ag-theme-material.
-
-⸻
-
-Step 4: Create a Basic Grid
-
-Here’s an example of a basic grid setup:
-
-HTML File (e.g., app.component.html)
-
-<div
-  class="ag-theme-alpine"
-  style="width: 100%; height: 500px;"
->
-  <ag-grid-angular
-    [rowData]="rowData"
-    [columnDefs]="columnDefs"
-    [defaultColDef]="defaultColDef"
-    (gridReady)="onGridReady($event)"
-  ></ag-grid-angular>
-</div>
-
-TypeScript File (e.g., app.component.ts)
-
-import { Component } from '@angular/core';
+import { Component, HostListener, OnInit } from '@angular/core';
 
 @Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
+  selector: 'app-your-component',
+  templateUrl: './your-component.component.html',
 })
-export class AppComponent {
-  rowData = [
-    { make: 'Toyota', model: 'Celica', price: 35000 },
-    { make: 'Ford', model: 'Mondeo', price: 32000 },
-    { make: 'Porsche', model: 'Boxster', price: 72000 },
-  ];
+export class YourComponent implements OnInit {
+  customers: any[] = []; // your data
+  rows: number = 5;
 
-  columnDefs = [
-    { headerName: 'Make', field: 'make', sortable: true, filter: true },
-    { headerName: 'Model', field: 'model', sortable: true, filter: true },
-    { headerName: 'Price', field: 'price', sortable: true, filter: true },
-  ];
+  ngOnInit() {
+    this.setRowsBasedOnScreenHeight();
+  }
 
-  defaultColDef = {
-    resizable: true,
-    sortable: true,
-    filter: true,
-  };
+  @HostListener('window:resize', ['$event'])
+  onResize() {
+    this.setRowsBasedOnScreenHeight();
+  }
 
-  onGridReady(params: any): void {
-    params.api.sizeColumnsToFit();
+  setRowsBasedOnScreenHeight() {
+    const height = window.innerHeight;
+
+    if (height > 800 && height < 1000) {
+      this.rows = 10;
+    } else if (height >= 1000) {
+      this.rows = 15;
+    } else {
+      this.rows = 5;
+    }
   }
 }
 
 
-
 ⸻
 
-Step 5: Add More Features
+Step 2: Update the Template (HTML)
 
-1. Add Pagination
-
-Enable pagination in your grid by adding the pagination property:
-
-HTML
-
-<ag-grid-angular
-  [rowData]="rowData"
-  [columnDefs]="columnDefs"
-  [defaultColDef]="defaultColDef"
-  [pagination]="true"
-  [paginationPageSize]="10"
-  (gridReady)="onGridReady($event)"
-></ag-grid-angular>
-
+<p-table
+  [value]="customers"
+  [paginator]="true"
+  [rows]="rows"
+  [responsiveLayout]="'scroll'">
+  <!-- your columns here -->
+</p-table>
 
 
 ⸻
 
-2. Add Custom Overlay (e.g., No Rows Message)
+Optional Tips:
+	•	If your component is standalone in Angular 17+, make sure you import TableModule from primeng/table.
+	•	You can fine-tune the screen height conditions (>800, <1000) to your UI layout.
+	•	HostListener listens to window resize and recalculates row count on-the-fly.
 
-To display a custom message when there are no rows, configure the noRowsOverlayComponentParams:
-
-HTML
-
-<ag-grid-angular
-  [rowData]="rowData"
-  [columnDefs]="columnDefs"
-  [defaultColDef]="defaultColDef"
-  [noRowsOverlayComponentParams]="{
-    overlayNoRowsTemplate: '<span style=\'color: red;\'>No data available!</span>'
-  }"
-></ag-grid-angular>
-
-
-
-⸻
-
-3. Enable Row Selection
-
-Add row selection with the rowSelection property:
-
-HTML
-
-<ag-grid-angular
-  [rowData]="rowData"
-  [columnDefs]="columnDefs"
-  [defaultColDef]="defaultColDef"
-  [rowSelection]="'multiple'"
-  (rowSelected)="onRowSelected($event)"
-></ag-grid-angular>
-
-TypeScript
-
-onRowSelected(event: any): void {
-  console.log('Selected Row Data:', event.node.data);
-}
-
-
-
-⸻
-
-4. Dynamically Fetch Data
-
-If your data comes from an API, update rowData dynamically:
-
-TypeScript
-
-import { HttpClient } from '@angular/common/http';
-import { Component, OnInit } from '@angular/core';
-
-@Component({
-  selector: 'app-root',
-  templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-})
-export class AppComponent implements OnInit {
-  rowData: any[] = [];
-  columnDefs = [
-    { headerName: 'ID', field: 'id' },
-    { headerName: 'Title', field: 'title' },
-    { headerName: 'Completed', field: 'completed' },
-  ];
-
-  constructor(private http: HttpClient) {}
-
-  ngOnInit(): void {
-    this.http
-      .get<any[]>('https://jsonplaceholder.typicode.com/todos')
-      .subscribe((data) => {
-        this.rowData = data.slice(0, 10); // Limit data for demonstration
-      });
-  }
-}
-
-
-
-⸻
-
-5. Styling
-
-You can customize the grid’s appearance using CSS. For example:
-
-CSS (e.g., app.component.css)
-
-.ag-theme-alpine {
-  font-family: Arial, sans-serif;
-}
-
-
-
-⸻
-
-Step 6: Run the Application
-
-Start the Angular app to see the AG Grid in action:
-
-ng serve
-
-Open the application in your browser at http://localhost:4200/.
-
-⸻
-
-This guide provides a complete AG Grid setup. Let me know if you need further customization or feature implementation!
+Would you like to add responsiveness for mobile views as well?
